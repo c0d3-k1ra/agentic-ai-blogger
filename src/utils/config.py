@@ -50,6 +50,42 @@ class Settings(BaseSettings):
         gt=0  # Must be greater than 0
     )
     
+    # Database configuration
+    DATABASE_URL: SecretStr | None = Field(
+        default=None,
+        description="PostgreSQL database connection URL"
+    )
+    
+    DB_POOL_SIZE: int = Field(
+        default=5,
+        description="Database connection pool size",
+        gt=0
+    )
+    
+    DB_MAX_OVERFLOW: int = Field(
+        default=10,
+        description="Maximum overflow connections in pool",
+        ge=0
+    )
+    
+    DB_POOL_TIMEOUT: int = Field(
+        default=30,
+        description="Database pool timeout in seconds",
+        gt=0
+    )
+    
+    DB_MAX_RETRIES: int = Field(
+        default=3,
+        description="Maximum number of retry attempts for database operations",
+        ge=0
+    )
+    
+    DB_RETRY_DELAY: float = Field(
+        default=1.0,
+        description="Initial delay between retries in seconds",
+        gt=0
+    )
+    
     # Secret fields - masked in repr
     API_KEY: SecretStr | None = Field(
         default=None,
@@ -72,6 +108,10 @@ class Settings(BaseSettings):
                 f"LOG_LEVEL must be one of {valid_levels}, got '{v}'"
             )
         return v_upper
+    
+    def get_database_url(self) -> str | None:
+        """Get the database URL value if set."""
+        return self.DATABASE_URL.get_secret_value() if self.DATABASE_URL else None
     
     def get_api_key(self) -> str | None:
         """Get the API key value if set."""
