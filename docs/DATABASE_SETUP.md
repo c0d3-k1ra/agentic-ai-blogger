@@ -325,6 +325,260 @@ except DatabaseRetryError as e:
     # Handle failure (e.g., return error to user)
 ```
 
+## Database Migrations with Alembic
+
+### Overview
+
+Alembic is our database migration tool that tracks and applies schema changes over time. It works alongside SQLAlchemy to:
+
+- Version control your database schema
+- Apply changes consistently across environments
+- Provide rollback capability for schema changes
+- Generate migrations automatically from model changes
+
+### Quick Start with Migrations
+
+#### Check Current Migration State
+
+```bash
+poetry run alembic current
+```
+
+Shows the current revision your database is at.
+
+#### Apply All Pending Migrations
+
+```bash
+poetry run alembic upgrade head
+```
+
+Applies all migrations up to the latest version.
+
+#### Rollback One Migration
+
+```bash
+poetry run alembic downgrade -1
+```
+
+Reverts the most recent migration.
+
+### Common Migration Commands
+
+| Command | Description |
+| --------- | ------------- |
+| `alembic current` | Show current migration revision |
+| `alembic upgrade head` | Apply all pending migrations |
+| `alembic downgrade -1` | Rollback one migration |
+| `alembic downgrade base` | Rollback all migrations |
+| `alembic history` | Show migration history |
+| `alembic revision --autogenerate -m "msg"` | Create new migration |
+
+### Creating New Migrations
+
+When you modify SQLAlchemy models in `src/database/models.py`, create a migration:
+
+```bash
+# Generate migration from model changes
+poetry run alembic revision --autogenerate -m "add user email column"
+```
+
+This will:
+1. Compare your models to the current database schema
+2. Generate a new migration file in `migrations/versions/`
+3. Include both `upgrade()` and `downgrade()` functions
+
+**Always review auto-generated migrations before applying them!**
+
+### Migration File Structure
+
+Each migration file contains:
+
+```python
+def upgrade() -> None:
+    """Upgrade schema - apply changes."""
+    # SQL operations to move forward
+    op.create_table(...)
+    op.add_column(...)
+
+def downgrade() -> None:
+    """Downgrade schema - revert changes."""
+    # SQL operations to rollback
+    op.drop_column(...)
+    op.drop_table(...)
+```
+
+### Migration Workflow
+
+#### 1. Development Workflow
+
+```bash
+# 1. Modify models in src/database/models.py
+# 2. Generate migration
+poetry run alembic revision --autogenerate -m "add new table"
+
+# 3. Review generated migration file
+cat migrations/versions/XXXXX_add_new_table.py
+
+# 4. Test upgrade
+poetry run alembic upgrade head
+
+# 5. Test downgrade
+poetry run alembic downgrade -1
+
+# 6. Test upgrade again (round-trip)
+poetry run alembic upgrade head
+
+# 7. Commit migration file to git
+git add migrations/versions/XXXXX_add_new_table.py
+git commit -m "Add migration for new table"
+```
+
+#### 2. Production Deployment
+
+```bash
+# On production server after deploying new code
+poetry run alembic upgrade head
+```
+
+### Configuration
+
+#### Database Connection
+
+Alembic reads the database URL from the `DATABASE_URL` environment variable:
+
+```bash
+export DATABASE_URL="postgresql://user:password@localhost:5432/dbname"
+```
+
+Or add to `.env` file:
+
+```env
+DATABASE_URL=postgresql://user:password@localhost:5432/dbname
+```
+
+#### Configuration Files
+
+- `alembic.ini` - Main Alembic configuration
+- `migrations/env.py` - Environment setup (loads .env, imports models)
+- `migrations/versions/` - Directory containing migration files
+
+### Best Practices
+
+#### ✅ DO
+
+- **Always test both upgrade AND downgrade** before committing
+- **Review auto-generated migrations** - Alembic might miss some changes
+- **Keep migrations focused** - One logical change per migration
+- **Test on production-like data** before deploying
+- **Commit migrations with related code** in the same PR
+- **Keep downgrade functions complete** - Always be able to rollback
+
+#### ❌ DON'T
+
+- **Never modify committed migrations** - Create a new migration instead
+- **Don't skip migrations** - Always apply migrations in order
+- **Don't mix data and schema migrations** - Keep them separate
+- **Don't use raw SQL without necessity** - Prefer Alembic operations
+- **Don't forget to test downgrade** - It's there for a reason
+
+### Common Operations
+
+#### Add a Column
+
+```python
+def upgrade():
+    op.add_column('users', sa.Column('email', sa.String(255), nullable=True))
+
+def downgrade():
+    op.drop_column('users', 'email')
+```
+
+#### Create a Table
+
+```python
+def upgrade():
+    op.create_table(
+        'users',
+        sa.Column('id', sa.UUID(), primary_key=True),
+        sa.Column('name', sa.String(255), nullable=False)
+    )
+
+def downgrade():
+    op.drop_table('users')
+```
+
+#### Add an Index
+
+```python
+def upgrade():
+    op.create_index('ix_users_email', 'users', ['email'])
+
+def downgrade():
+    op.drop_index('ix_users_email', table_name='users')
+```
+
+### Handling ENUM Types (PostgreSQL)
+
+PostgreSQL ENUMs require special handling:
+
+```python
+def upgrade():
+    # Create ENUM type
+    status_enum = postgresql.ENUM('draft', 'published', name='status_enum')
+    status_enum.create(op.get_bind())
+
+    # Use in column
+    op.add_column('articles',
+        sa.Column('status', status_enum, server_default='draft'))
+
+def downgrade():
+    op.drop_column('articles', 'status')
+
+    # Drop ENUM type
+    op.execute('DROP TYPE IF EXISTS status_enum')
+```
+
+### Migration Branches and Conflicts
+
+If multiple developers create migrations simultaneously:
+
+```bash
+# Check for multiple heads
+poetry run alembic heads
+
+# Merge branches
+poetry run alembic merge -m "merge migrations" head1 head2
+```
+
+### Troubleshooting Migrations
+
+#### Migration is Stuck
+
+```bash
+# Force set revision (use with caution!)
+poetry run alembic stamp head
+```
+
+#### Migration Failed Mid-way
+
+```bash
+# Manually fix database state, then:
+poetry run alembic stamp <revision_id>
+```
+
+#### Need to Skip a Bad Migration
+
+```bash
+# Downgrade before the bad migration
+poetry run alembic downgrade <previous_revision>
+
+# Fix the migration file or create a new one
+poetry run alembic revision --autogenerate -m "fix schema"
+
+# Apply new migration
+poetry run alembic upgrade head
+```
+
 ## Troubleshooting
 
 ### "Database not initialized" Error
