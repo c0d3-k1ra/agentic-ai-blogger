@@ -4,11 +4,11 @@ import time
 from contextlib import contextmanager
 from typing import Generator
 
-from sqlalchemy import create_engine, exc, text
+from sqlalchemy import create_engine, exc, insert, text
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session, sessionmaker
 
-from src.database.models import Article, Topic
+from src.database.models import Article, SearchResult, Topic
 from src.utils.config import get_settings
 from src.utils.logging_config import get_logger
 
@@ -405,6 +405,48 @@ def create_article(
     session.flush()
     session.refresh(article)
     return article
+
+
+def insert_search_results(session: Session, results: list[dict]) -> int:
+    """
+    Insert normalized search results using bulk insert.
+    Duplicates (based on source, url) are automatically ignored via ON CONFLICT.
+
+    Args:
+        session: SQLAlchemy session (caller must commit)
+        results: List of normalized result dicts with keys:
+                 title, summary, url, source, published_at, raw
+
+    Returns:
+        Number of rows successfully inserted
+
+    Raises:
+        ValueError: If results is not a list or contains invalid data
+    """
+    if not isinstance(results, list):
+        raise ValueError("results must be a list")
+
+    if not results:
+        return 0
+
+    # Validate required fields before attempting insert
+    required_fields = {"title", "summary", "url", "source", "raw"}
+    for result in results:
+        missing = required_fields - set(result.keys())
+        if missing:
+            raise ValueError(f"Missing required field: {missing.pop()}")
+
+    # Bulk insert with ON CONFLICT DO NOTHING
+    # This leverages the unique constraint (source, url) at the database level
+    stmt = insert(SearchResult).values(results)
+    stmt = stmt.on_conflict_do_nothing(index_elements=["source", "url"])
+
+    result = session.execute(stmt)
+    inserted_count = result.rowcount
+
+    _get_logger().debug("Inserted %d search results (duplicates ignored)", inserted_count)
+
+    return inserted_count
 
 
 def get_article_by_id(session: Session, article_id) -> Article | None:

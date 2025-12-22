@@ -11,7 +11,17 @@ This module defines the core SQLAlchemy models using PostgreSQL-specific feature
 from datetime import datetime, timezone
 from typing import List
 
-from sqlalchemy import DateTime, Enum, ForeignKey, Index, String, Text, event, text
+from sqlalchemy import (
+    DateTime,
+    Enum,
+    ForeignKey,
+    Index,
+    String,
+    Text,
+    UniqueConstraint,
+    event,
+    text,
+)
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
@@ -298,6 +308,47 @@ class EmailThread(Base):
 
     def __repr__(self) -> str:
         return f"<EmailThread(id={self.id}, article_id={self.article_id}, status={self.status})>"
+
+
+class SearchResult(Base):
+    """
+    SearchResult model for storing normalized search results from external sources.
+
+    This model persists search results from various sources (Tavily, HackerNews, arXiv,
+    GitHub Trending, Google Trends) in a normalized schema.
+    """
+
+    __tablename__ = "search_results"
+
+    id: Mapped[UUID] = mapped_column(
+        UUID(as_uuid=True),
+        primary_key=True,
+        server_default=text("gen_random_uuid()"),
+    )
+    title: Mapped[str] = mapped_column(Text, nullable=False)
+    summary: Mapped[str] = mapped_column(Text, nullable=False)
+    url: Mapped[str] = mapped_column(Text, nullable=False)
+    source: Mapped[str] = mapped_column(Text, nullable=False)
+    published_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
+    raw: Mapped[dict] = mapped_column(JSONB, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=text("CURRENT_TIMESTAMP"),
+    )
+
+    # Indexes and constraints
+    __table_args__ = (
+        Index("ix_search_results_source", "source"),
+        Index("ix_search_results_published_at", "published_at"),
+        UniqueConstraint("source", "url", name="uq_search_results_source_url"),
+    )
+
+    def __repr__(self) -> str:
+        return f"<SearchResult(id={self.id}, source={self.source}, title={self.title[:50]})>"
 
 
 # Event listener for auto-updating updated_at on Topic
