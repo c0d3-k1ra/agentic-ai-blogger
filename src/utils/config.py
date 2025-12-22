@@ -98,6 +98,59 @@ class Settings(BaseSettings):
         description="Application secret key"
     )
 
+    # LLM Configuration (Track 2)
+    LLM_PROVIDER: Literal["gemini", "openai"] = Field(
+        default="gemini",
+        description="LLM provider to use"
+    )
+
+    LLM_API_KEY: SecretStr | None = Field(
+        default=None,
+        description="API key for LLM provider"
+    )
+
+    LLM_DEFAULT_MODEL: str = Field(
+        default="gemini-1.5-flash",
+        description="Default LLM model to use (plain model ID)"
+    )
+
+    LLM_MAX_RETRIES: int = Field(
+        default=3,
+        description="Maximum retry attempts for LLM calls",
+        ge=0
+    )
+
+    LLM_RETRY_DELAY: float = Field(
+        default=1.0,
+        description="Initial delay between retries in seconds",
+        gt=0
+    )
+
+    LLM_TIMEOUT: int = Field(
+        default=30,
+        description="LLM API timeout in seconds",
+        gt=0
+    )
+
+    # Custom LLM Endpoint (optional) - for self-hosted/local LLMs
+    CUSTOM_LLM_BASE_URL: str | None = Field(
+        default=None,
+        description="Custom OpenAI-compatible endpoint URL (e.g., Ollama, LM Studio, vLLM)"
+    )
+
+    CUSTOM_LLM_API_KEY: SecretStr | None = Field(
+        default=None,
+        description="API key for custom LLM endpoint (if required)"
+    )
+
+    CUSTOM_LLM_MODEL: str | None = Field(
+        default=None,
+        description=(
+            "Model ID for custom endpoint "
+            "(overrides LLM_DEFAULT_MODEL when custom URL is set)"
+        )
+    )
+
     @field_validator("LOG_LEVEL")
     @classmethod
     def validate_log_level(cls, v: str) -> str:
@@ -121,6 +174,30 @@ class Settings(BaseSettings):
     def get_secret_key(self) -> str | None:
         """Get the secret key value if set."""
         return self.SECRET_KEY.get_secret_value() if self.SECRET_KEY else None
+
+    def get_llm_api_key(self) -> str:
+        """Get the LLM API key value.
+        
+        Returns:
+            str: The LLM API key
+            
+        Raises:
+            ValueError: If LLM_API_KEY is not configured
+        """
+        if self.LLM_API_KEY is None:
+            raise ValueError(
+                "LLM_API_KEY is not configured. "
+                "Please set LLM_API_KEY environment variable to use LLM features."
+            )
+        return self.LLM_API_KEY.get_secret_value()
+
+    def get_custom_llm_api_key(self) -> str | None:
+        """Get the custom LLM API key value if set.
+        
+        Returns:
+            str | None: The custom LLM API key, or None if not configured
+        """
+        return self.CUSTOM_LLM_API_KEY.get_secret_value() if self.CUSTOM_LLM_API_KEY else None
 
 
 # Singleton instance

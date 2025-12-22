@@ -1,9 +1,16 @@
+# Configuration
+pydantic-settings>=2.0.0
+
 # Database
 sqlalchemy>=2.0.0
 psycopg2-binary>=2.9.0
 
 # Testing
 pytest>=7.0.0
+pytest-asyncio>=0.21.0
+
+# LLM Integration (Track 2)
+litellm>=1.0.0
 
 # Linting
 pylint>=3.0.0
