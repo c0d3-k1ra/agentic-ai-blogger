@@ -1,6 +1,5 @@
 """Tests for SearchResult database persistence."""
 
-import os
 from datetime import datetime, timezone
 
 import pytest
@@ -10,23 +9,10 @@ from src.database.db import close_db, get_session, init_db, insert_search_result
 from src.database.models import Base, SearchResult
 from src.utils.config import reset_settings
 
-# Mark all tests in this file as integration tests requiring PostgreSQL
-pytestmark = pytest.mark.skipif(
-    not os.getenv("RUN_INTEGRATION_TESTS"),
-    reason="Integration tests require PostgreSQL - set RUN_INTEGRATION_TESTS=1",
-)
-
 
 @pytest.fixture(autouse=True)
 def setup_test_env():
     """Set up test environment variables before each test."""
-    os.environ["APP_NAME"] = "test-app"
-    os.environ["ENVIRONMENT"] = "development"
-    os.environ["LOG_LEVEL"] = "INFO"
-    os.environ["DATABASE_URL"] = "postgresql://test:test@localhost:5432/testdb"
-    os.environ["DB_MAX_RETRIES"] = "3"
-    os.environ["DB_RETRY_DELAY"] = "0.1"
-
     # Reset settings and database state before each test
     reset_settings()
     close_db()
@@ -374,12 +360,7 @@ def test_insert_different_sources_same_url_allowed(db_session):
 def test_no_session_leak_on_error(db_session):
     """Test that sessions don't leak when errors occur."""
     invalid_results = [
-        {
-            "title": "Missing url field",
-            "summary": "Summary",
-            "source": "test",
-            "raw": {},
-        }
+        {"title": "Missing url field", "summary": "Summary", "source": "test", "raw": {}}
     ]
 
     # This should raise an error

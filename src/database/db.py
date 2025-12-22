@@ -4,7 +4,8 @@ import time
 from contextlib import contextmanager
 from typing import Generator
 
-from sqlalchemy import create_engine, exc, insert, text
+from sqlalchemy import create_engine, exc, text
+from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session, sessionmaker
 

@@ -139,10 +139,9 @@ jobs:
       run: poetry install --no-interaction
 
     - name: Run integration tests
-      run: poetry run pytest tests/test_database/test_search_results.py -v --tb=short
+      run: poetry run pytest integration_tests/ --no-cov -v --tb=short
       env:
         APP_NAME: test-app
         ENVIRONMENT: development
         LOG_LEVEL: INFO
         DATABASE_URL: postgresql://test:test@localhost:5432/testdb
-        RUN_INTEGRATION_TESTS: "1"
