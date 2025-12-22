@@ -1,7 +1,7 @@
 """Tests for Tavily search client."""
 
 import os
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
@@ -24,8 +24,8 @@ async def test_search_tavily_success():
     ):
         mock_instance = mock_client.return_value.__aenter__.return_value
         mock_response_obj = AsyncMock()
-        mock_response_obj.raise_for_status = AsyncMock()
-        mock_response_obj.json = AsyncMock(return_value=mock_response)
+        mock_response_obj.raise_for_status = Mock()  # httpx.raise_for_status() is synchronous
+        mock_response_obj.json = Mock(return_value=mock_response)  # httpx.json() is synchronous
         mock_instance.post = AsyncMock(return_value=mock_response_obj)
 
         results = await search_tavily("test query", limit=10)
@@ -59,8 +59,8 @@ async def test_search_tavily_empty_results():
     ):
         mock_instance = mock_client.return_value.__aenter__.return_value
         mock_response_obj = AsyncMock()
-        mock_response_obj.raise_for_status = AsyncMock()
-        mock_response_obj.json = AsyncMock(return_value={"results": []})
+        mock_response_obj.raise_for_status = Mock()  # httpx.raise_for_status() is synchronous
+        mock_response_obj.json = Mock(return_value={"results": []})  # httpx.json() is synchronous
         mock_instance.post = AsyncMock(return_value=mock_response_obj)
 
         results = await search_tavily("obscure query")
