@@ -264,6 +264,7 @@ class TestRetryLogic:
             assert sleep_calls[0] == 1.0  # First retry: delay * 2^0
             assert sleep_calls[1] == 2.0  # Second retry: delay * 2^1
 
+
 class TestHealthCheck:
     """Tests for database health check."""
 

@@ -38,7 +38,9 @@ class TestSettings:
         error_str = str(exc_info.value)
         assert "ENVIRONMENT" in error_str
 
-    def test_missing_all_required_fields_raises_error(self, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_missing_all_required_fields_raises_error(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         """Test that missing all required fields raises ValidationError."""
         # Clear any environment variables including those from .env
         monkeypatch.delenv("APP_NAME", raising=False)
@@ -215,7 +217,9 @@ class TestGetSettings:
         assert settings1.APP_NAME == "test-app"
         assert settings2.APP_NAME == "different-app"
 
-    def test_get_settings_raises_error_on_missing_required_fields(self, monkeypatch: pytest.MonkeyPatch, tmp_path: Any) -> None:
+    def test_get_settings_raises_error_on_missing_required_fields(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Any
+    ) -> None:
         """Test that get_settings raises ValidationError when required fields are missing."""
         # Clear required fields including those from .env
         monkeypatch.delenv("APP_NAME", raising=False)

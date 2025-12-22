@@ -24,131 +24,85 @@ class Settings(BaseSettings):
     )
 
     # Required fields - will raise error if missing
-    APP_NAME: str = Field(
-        ...,
-        description="Application name"
-    )
+    APP_NAME: str = Field(..., description="Application name")
 
     ENVIRONMENT: Literal["development", "staging", "production"] = Field(
-        ...,
-        description="Application environment"
+        ..., description="Application environment"
     )
 
     # Optional fields with defaults
-    LOG_LEVEL: str = Field(
-        default="INFO",
-        description="Logging level"
-    )
+    LOG_LEVEL: str = Field(default="INFO", description="Logging level")
 
-    DEBUG: bool = Field(
-        default=False,
-        description="Debug mode flag"
-    )
+    DEBUG: bool = Field(default=False, description="Debug mode flag")
 
     API_TIMEOUT: int = Field(
         default=30,
         description="API timeout in seconds",
-        gt=0  # Must be greater than 0
+        gt=0,  # Must be greater than 0
     )
 
     # Database configuration
     DATABASE_URL: SecretStr | None = Field(
-        default=None,
-        description="PostgreSQL database connection URL"
+        default=None, description="PostgreSQL database connection URL"
     )
 
-    DB_POOL_SIZE: int = Field(
-        default=5,
-        description="Database connection pool size",
-        gt=0
-    )
+    DB_POOL_SIZE: int = Field(default=5, description="Database connection pool size", gt=0)
 
     DB_MAX_OVERFLOW: int = Field(
-        default=10,
-        description="Maximum overflow connections in pool",
-        ge=0
+        default=10, description="Maximum overflow connections in pool", ge=0
     )
 
-    DB_POOL_TIMEOUT: int = Field(
-        default=30,
-        description="Database pool timeout in seconds",
-        gt=0
-    )
+    DB_POOL_TIMEOUT: int = Field(default=30, description="Database pool timeout in seconds", gt=0)
 
     DB_MAX_RETRIES: int = Field(
-        default=3,
-        description="Maximum number of retry attempts for database operations",
-        ge=0
+        default=3, description="Maximum number of retry attempts for database operations", ge=0
     )
 
     DB_RETRY_DELAY: float = Field(
-        default=1.0,
-        description="Initial delay between retries in seconds",
-        gt=0
+        default=1.0, description="Initial delay between retries in seconds", gt=0
     )
 
     # Secret fields - masked in repr
-    API_KEY: SecretStr | None = Field(
-        default=None,
-        description="API key for external services"
-    )
+    API_KEY: SecretStr | None = Field(default=None, description="API key for external services")
 
-    SECRET_KEY: SecretStr | None = Field(
-        default=None,
-        description="Application secret key"
-    )
+    SECRET_KEY: SecretStr | None = Field(default=None, description="Application secret key")
 
     # LLM Configuration (Track 2)
     LLM_PROVIDER: Literal["gemini", "openai"] = Field(
-        default="gemini",
-        description="LLM provider to use"
+        default="gemini", description="LLM provider to use"
     )
 
-    LLM_API_KEY: SecretStr | None = Field(
-        default=None,
-        description="API key for LLM provider"
-    )
+    LLM_API_KEY: SecretStr | None = Field(default=None, description="API key for LLM provider")
 
     LLM_DEFAULT_MODEL: str = Field(
-        default="gemini-1.5-flash",
-        description="Default LLM model to use (plain model ID)"
+        default="gemini-1.5-flash", description="Default LLM model to use (plain model ID)"
     )
 
     LLM_MAX_RETRIES: int = Field(
-        default=3,
-        description="Maximum retry attempts for LLM calls",
-        ge=0
+        default=3, description="Maximum retry attempts for LLM calls", ge=0
     )
 
     LLM_RETRY_DELAY: float = Field(
-        default=1.0,
-        description="Initial delay between retries in seconds",
-        gt=0
+        default=1.0, description="Initial delay between retries in seconds", gt=0
     )
 
-    LLM_TIMEOUT: int = Field(
-        default=30,
-        description="LLM API timeout in seconds",
-        gt=0
-    )
+    LLM_TIMEOUT: int = Field(default=30, description="LLM API timeout in seconds", gt=0)
 
     # Custom LLM Endpoint (optional) - for self-hosted/local LLMs
     CUSTOM_LLM_BASE_URL: str | None = Field(
         default=None,
-        description="Custom OpenAI-compatible endpoint URL (e.g., Ollama, LM Studio, vLLM)"
+        description="Custom OpenAI-compatible endpoint URL (e.g., Ollama, LM Studio, vLLM)",
     )
 
     CUSTOM_LLM_API_KEY: SecretStr | None = Field(
-        default=None,
-        description="API key for custom LLM endpoint (if required)"
+        default=None, description="API key for custom LLM endpoint (if required)"
     )
 
     CUSTOM_LLM_MODEL: str | None = Field(
         default=None,
         description=(
-            "Model ID for custom endpoint "
-            "(overrides LLM_DEFAULT_MODEL when custom URL is set)"
-        )
+            "Model ID for custom endpoint (overrides LLM_DEFAULT_MODEL when custom URL is set)"
+        ),
     )
 
     @field_validator("LOG_LEVEL")
@@ -158,9 +112,7 @@ class Settings(BaseSettings):
         valid_levels = ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
         v_upper = v.upper()
         if v_upper not in valid_levels:
-            raise ValueError(
-                f"LOG_LEVEL must be one of {valid_levels}, got '{v}'"
-            )
+            raise ValueError(f"LOG_LEVEL must be one of {valid_levels}, got '{v}'")
         return v_upper
 
     def get_database_url(self) -> str | None:

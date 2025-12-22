@@ -27,6 +27,7 @@ class Topic(Base):
     Relationships:
     - One-to-many with Article (RESTRICT on delete - cannot delete topic with articles)
     """
+
     __tablename__ = "topics"
 
     id: Mapped[UUID] = mapped_column(
@@ -84,6 +85,7 @@ class Article(Base):
     - One-to-many with WorkflowState (CASCADE on Article delete)
     - One-to-many with EmailThread (CASCADE on Article delete)
     """
+
     __tablename__ = "articles"
 
     id: Mapped[UUID] = mapped_column(
@@ -153,8 +155,7 @@ class Article(Base):
     )
 
     def __repr__(self) -> str:
-        return (f"<Article(id={self.id}, title={self.title}, "
-                f"status={self.status})>")
+        return f"<Article(id={self.id}, title={self.title}, status={self.status})>"
 
 
 class WorkflowState(Base):
@@ -164,6 +165,7 @@ class WorkflowState(Base):
     Relationships:
     - Many-to-one with Article (CASCADE on Article delete)
     """
+
     __tablename__ = "workflow_states"
 
     id: Mapped[UUID] = mapped_column(
@@ -219,8 +221,7 @@ class WorkflowState(Base):
     )
 
     def __repr__(self) -> str:
-        return (f"<WorkflowState(id={self.id}, article_id={self.article_id}, "
-                f"state={self.state})>")
+        return f"<WorkflowState(id={self.id}, article_id={self.article_id}, state={self.state})>"
 
 
 class EmailThread(Base):
@@ -230,6 +231,7 @@ class EmailThread(Base):
     Relationships:
     - Many-to-one with Article (CASCADE on Article delete)
     """
+
     __tablename__ = "email_threads"
 
     id: Mapped[UUID] = mapped_column(
@@ -295,8 +297,7 @@ class EmailThread(Base):
     )
 
     def __repr__(self) -> str:
-        return (f"<EmailThread(id={self.id}, article_id={self.article_id}, "
-                f"status={self.status})>")
+        return f"<EmailThread(id={self.id}, article_id={self.article_id}, status={self.status})>"
 
 
 # Event listener for auto-updating updated_at on Topic

@@ -76,6 +76,7 @@ def retry_on_transient_error(max_retries: int | None = None, delay: float | None
     Returns:
         Decorated function with retry logic
     """
+
     def decorator(func):
         def wrapper(*args, **kwargs):
             settings = get_settings()
@@ -96,19 +97,18 @@ def retry_on_transient_error(max_retries: int | None = None, delay: float | None
 
                     if attempt < retries:
                         # Calculate exponential backoff
-                        wait_time = retry_delay * (2 ** attempt)
+                        wait_time = retry_delay * (2**attempt)
                         _get_logger().warning(
                             "Transient database error (attempt %d/%d): %s. Retrying in %.2fs...",
                             attempt + 1,
                             retries + 1,
                             e,
-                            wait_time
+                            wait_time,
                         )
                         time.sleep(wait_time)
                     else:
                         _get_logger().error(
-                            "All %d retry attempts exhausted for database operation",
-                            retries + 1
+                            "All %d retry attempts exhausted for database operation", retries + 1
                         )
 
             # All retries exhausted
@@ -117,6 +117,7 @@ def retry_on_transient_error(max_retries: int | None = None, delay: float | None
             ) from last_error
 
         return wrapper
+
     return decorator
 
 
@@ -180,9 +181,7 @@ def get_engine() -> Engine:
         DatabaseError: If engine is not initialized
     """
     if _engine is None:
-        raise DatabaseError(
-            "Database engine not initialized. Call init_db() first."
-        )
+        raise DatabaseError("Database engine not initialized. Call init_db() first.")
     return _engine
 
 
@@ -211,9 +210,7 @@ def get_session() -> Generator[Session, None, None]:
         DatabaseRetryError: If all retry attempts fail
     """
     if _session_factory is None:
-        raise DatabaseError(
-            "Database session factory not initialized. Call init_db() first."
-        )
+        raise DatabaseError("Database session factory not initialized. Call init_db() first.")
 
     session = _session_factory()
     try:
@@ -281,7 +278,7 @@ def create_topic(
     name: str,
     description: str | None = None,
     keywords: list | None = None,
-    metadata: dict | None = None
+    metadata: dict | None = None,
 ) -> Topic:
     """
     Create a new topic.
@@ -303,7 +300,7 @@ def create_topic(
         name=name,
         description=description,
         keywords=keywords if keywords is not None else [],
-        meta_data=metadata if metadata is not None else {}
+        meta_data=metadata if metadata is not None else {},
     )
     session.add(topic)
     session.flush()
@@ -358,13 +355,13 @@ def update_topic(session: Session, topic_id, **fields) -> Topic:
     if not topic:
         raise ValueError(f"Topic with id {topic_id} not found")
 
-    allowed_fields = {'name', 'description', 'keywords', 'metadata'}
+    allowed_fields = {"name", "description", "keywords", "metadata"}
     unknown = set(fields.keys()) - allowed_fields
     if unknown:
         raise ValueError(f"Unknown fields: {unknown}")
 
     for key, value in fields.items():
-        if key == 'metadata':
+        if key == "metadata":
             topic.meta_data = value
         else:
             setattr(topic, key, value)
@@ -380,7 +377,7 @@ def create_article(
     topic_id,
     title: str,
     content: str | None = None,
-    metadata: dict | None = None
+    metadata: dict | None = None,
 ) -> Article:
     """
     Create a new article.
@@ -402,7 +399,7 @@ def create_article(
         topic_id=topic_id,
         title=title,
         content=content if content is not None else "",
-        meta_data=metadata if metadata is not None else {}
+        meta_data=metadata if metadata is not None else {},
     )
     session.add(article)
     session.flush()
@@ -443,13 +440,13 @@ def update_article(session: Session, article_id, **fields) -> Article:
     if not article:
         raise ValueError(f"Article with id {article_id} not found")
 
-    allowed_fields = {'title', 'content', 'metadata', 'status', 'published_at'}
+    allowed_fields = {"title", "content", "metadata", "status", "published_at"}
     unknown = set(fields.keys()) - allowed_fields
     if unknown:
         raise ValueError(f"Unknown fields: {unknown}")
 
     for key, value in fields.items():
-        if key == 'metadata':
+        if key == "metadata":
             article.meta_data = value
         else:
             setattr(article, key, value)

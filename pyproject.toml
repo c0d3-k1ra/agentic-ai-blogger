@@ -17,9 +17,10 @@ litellm = "^1.0.0"
 pytest = "^7.0.0"
 pytest-asyncio = "^0.21.0"
 ruff = "^0.14.10"
+pre-commit = ">=3.5.0,<4.0.0"
 
 [tool.ruff]
-# Same line length as pylint
+# Standard line length for Python projects
 line-length = 100
 
 # Exclude patterns

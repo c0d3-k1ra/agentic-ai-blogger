@@ -28,9 +28,7 @@ class TestLoggingSetup:
         reset_logging()
         reset_settings()
 
-    def test_setup_logging_configures_root_logger(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_setup_logging_configures_root_logger(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Test that setup_logging configures the root logger."""
         monkeypatch.setenv("APP_NAME", "test-app")
         monkeypatch.setenv("ENVIRONMENT", "development")
@@ -43,7 +41,8 @@ class TestLoggingSetup:
 
         # Check our StreamHandler was added (pytest may have its own handlers)
         stream_handlers = [
-            h for h in root_logger.handlers
+            h
+            for h in root_logger.handlers
             if isinstance(h, logging.StreamHandler) and h.stream == logging.sys.stdout
         ]
         assert len(stream_handlers) == 1
@@ -63,14 +62,13 @@ class TestLoggingSetup:
         root_logger = logging.getLogger()
         # Should only have 1 StreamHandler to stdout, not 3
         stream_handlers = [
-            h for h in root_logger.handlers
+            h
+            for h in root_logger.handlers
             if isinstance(h, logging.StreamHandler) and h.stream == logging.sys.stdout
         ]
         assert len(stream_handlers) == 1
 
-    def test_setup_logging_with_force_reconfigure(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_setup_logging_with_force_reconfigure(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Test that force_reconfigure allows reconfiguration."""
         monkeypatch.setenv("APP_NAME", "test-app")
         monkeypatch.setenv("ENVIRONMENT", "development")
@@ -90,7 +88,8 @@ class TestLoggingSetup:
 
         # Check we still have only 1 StreamHandler to stdout
         stream_handlers = [
-            h for h in root_logger.handlers
+            h
+            for h in root_logger.handlers
             if isinstance(h, logging.StreamHandler) and h.stream == logging.sys.stdout
         ]
         assert len(stream_handlers) == 1
@@ -247,9 +246,7 @@ class TestLogFormatters:
         assert log_data["environment"] == "development"
         assert "timestamp" in log_data
 
-    def test_json_formatter_with_exception(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_json_formatter_with_exception(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Test JSON formatter includes exception info when present."""
         monkeypatch.setenv("APP_NAME", "test-app")
         monkeypatch.setenv("ENVIRONMENT", "development")
@@ -261,6 +258,7 @@ class TestLogFormatters:
             raise ValueError("Test error")
         except ValueError:
             import sys
+
             exc_info = sys.exc_info()
 
         # Create a log record with exception
@@ -294,9 +292,7 @@ class TestGetLogger:
         reset_logging()
         reset_settings()
 
-    def test_get_logger_returns_logger_instance(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_get_logger_returns_logger_instance(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Test that get_logger returns a logger instance."""
         monkeypatch.setenv("APP_NAME", "test-app")
         monkeypatch.setenv("ENVIRONMENT", "development")
@@ -306,9 +302,7 @@ class TestGetLogger:
         assert isinstance(logger, logging.Logger)
         assert logger.name == "test.module"
 
-    def test_get_logger_configures_logging_if_needed(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_get_logger_configures_logging_if_needed(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Test that get_logger sets up logging if not already configured."""
         monkeypatch.setenv("APP_NAME", "test-app")
         monkeypatch.setenv("ENVIRONMENT", "development")

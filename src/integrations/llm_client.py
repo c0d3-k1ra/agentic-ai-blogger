@@ -58,28 +58,34 @@ def _is_retryable_error(error: Exception) -> bool:
 
     # Check for LiteLLM-specific errors
     error_str = str(error).lower()
-    if any(keyword in error_str for keyword in [
-        'rate limit',
-        'timeout',
-        'connection',
-        'server error',
-        '500',
-        '502',
-        '503',
-        '504',
-    ]):
+    if any(
+        keyword in error_str
+        for keyword in [
+            "rate limit",
+            "timeout",
+            "connection",
+            "server error",
+            "500",
+            "502",
+            "503",
+            "504",
+        ]
+    ):
         return True
 
     # Non-retryable: authentication, invalid request, etc.
-    if any(keyword in error_str for keyword in [
-        'authentication',
-        'invalid api key',
-        'unauthorized',
-        '401',
-        '403',
-        'invalid request',
-        '400',
-    ]):
+    if any(
+        keyword in error_str
+        for keyword in [
+            "authentication",
+            "invalid api key",
+            "unauthorized",
+            "401",
+            "403",
+            "invalid request",
+            "400",
+        ]
+    ):
         return False
 
     # Default: retry on unknown errors
@@ -164,7 +170,7 @@ async def _call_llm_with_retry(  # pylint: disable=too-many-locals
                         "temperature": temperature,
                         "base_url": base_url if base_url else "default",
                     }
-                }
+                },
             )
 
             # Call LiteLLM with configuration
@@ -190,19 +196,14 @@ async def _call_llm_with_retry(  # pylint: disable=too-many-locals
                         "model": model,
                         "attempts": attempt + 1,
                     }
-                }
+                },
             )
 
             return generated_text
 
         except Exception as e:
             # Log error details at DEBUG level
-            logger.debug(
-                "LLM error on attempt %d: %s: %s",
-                attempt + 1,
-                type(e).__name__,
-                str(e)
-            )
+            logger.debug("LLM error on attempt %d: %s: %s", attempt + 1, type(e).__name__, str(e))
 
             # Check if error is retryable
             if not _is_retryable_error(e):
@@ -214,11 +215,9 @@ async def _call_llm_with_retry(  # pylint: disable=too-many-locals
                             "model": model,
                             "error_type": type(e).__name__,
                         }
-                    }
+                    },
                 )
-                raise LLMRetryExhausted(
-                    f"Non-retryable error: {type(e).__name__}"
-                ) from e
+                raise LLMRetryExhausted(f"Non-retryable error: {type(e).__name__}") from e
 
             # Check if we've exhausted retries
             if attempt == max_retries:
@@ -233,20 +232,15 @@ async def _call_llm_with_retry(  # pylint: disable=too-many-locals
                             "attempts": attempt + 1,
                             "error_type": type(e).__name__,
                         }
-                    }
+                    },
                 )
                 raise LLMRetryExhausted(
                     f"All {max_retries} retries failed: {type(e).__name__}: {str(e)}"
                 ) from e
 
             # Calculate exponential backoff delay
-            delay = settings.LLM_RETRY_DELAY * (2 ** attempt)
-            logger.debug(
-                "Retrying in %ss (attempt %d/%d)",
-                delay,
-                attempt + 2,
-                max_retries + 1
-            )
+            delay = settings.LLM_RETRY_DELAY * (2**attempt)
+            logger.debug("Retrying in %ss (attempt %d/%d)", delay, attempt + 2, max_retries + 1)
             await asyncio.sleep(delay)
 
     # This should never be reached due to the loop logic

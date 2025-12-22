@@ -29,14 +29,14 @@ class GUID(TypeDecorator):  # pylint: disable=abstract-method,too-many-ancestors
     cache_ok = True
 
     def load_dialect_impl(self, dialect):
-        if dialect.name == 'postgresql':
+        if dialect.name == "postgresql":
             return dialect.type_descriptor(UUID(as_uuid=True))
         return dialect.type_descriptor(String(36))
 
     def process_bind_param(self, value, dialect):
         if value is None:
             return value
-        if dialect.name == 'postgresql':
+        if dialect.name == "postgresql":
             return value
         if isinstance(value, uuid.UUID):
             return str(value)
@@ -74,7 +74,11 @@ def db_session():
                     # Remove PostgreSQL-specific server default and add client-side defaults
                     column.server_default = None
                     # Check if this is an array or object type based on the column name
-                    if 'keywords' in column.name or 'participants' in column.name or 'messages' in column.name:
+                    if (
+                        "keywords" in column.name
+                        or "participants" in column.name
+                        or "messages" in column.name
+                    ):
                         column.default = ColumnDefault(list)
                     else:
                         column.default = ColumnDefault(dict)
@@ -105,6 +109,7 @@ def db_session():
                 from sqlalchemy.dialects.postgresql import (
                     UUID as PG_UUID,  # pylint: disable=import-outside-toplevel,reimported
                 )
+
                 column.type = PG_UUID(as_uuid=True)
                 column.default = None
             elif isinstance(column.type, JSON):
@@ -242,10 +247,7 @@ class TestJSONBFields:
 
     def test_topic_keywords_jsonb(self, db_session):
         """Test Topic keywords JSONB field."""
-        topic = Topic(
-            name="Test Topic",
-            keywords=["python", "machine learning", "AI"]
-        )
+        topic = Topic(name="Test Topic", keywords=["python", "machine learning", "AI"])
         db_session.add(topic)
         db_session.commit()
 
@@ -256,8 +258,7 @@ class TestJSONBFields:
     def test_topic_metadata_jsonb(self, db_session):
         """Test Topic metadata JSONB field."""
         topic = Topic(
-            name="Test Topic",
-            meta_data={"priority": "high", "tags": ["trending", "popular"]}
+            name="Test Topic", meta_data={"priority": "high", "tags": ["trending", "popular"]}
         )
         db_session.add(topic)
         db_session.commit()
@@ -277,11 +278,7 @@ class TestJSONBFields:
             topic_id=topic.id,
             title="Test Article",
             content="Content",
-            meta_data={
-                "model": "gpt-4",
-                "temperature": 0.7,
-                "tokens": 1500
-            }
+            meta_data={"model": "gpt-4", "temperature": 0.7, "tokens": 1500},
         )
         db_session.add(article)
         db_session.commit()
@@ -298,22 +295,14 @@ class TestJSONBFields:
         db_session.add(topic)
         db_session.commit()
 
-        article = Article(
-            topic_id=topic.id,
-            title="Test Article",
-            content="Content"
-        )
+        article = Article(topic_id=topic.id, title="Test Article", content="Content")
         db_session.add(article)
         db_session.commit()
 
         workflow = WorkflowState(
             article_id=article.id,
             state="drafting",
-            state_data={
-                "progress": 75,
-                "notes": "Nearly complete",
-                "blockers": []
-            }
+            state_data={"progress": 75, "notes": "Nearly complete", "blockers": []},
         )
         db_session.add(workflow)
         db_session.commit()
@@ -330,11 +319,7 @@ class TestJSONBFields:
         db_session.add(topic)
         db_session.commit()
 
-        article = Article(
-            topic_id=topic.id,
-            title="Test Article",
-            content="Content"
-        )
+        article = Article(topic_id=topic.id, title="Test Article", content="Content")
         db_session.add(article)
         db_session.commit()
 
@@ -344,8 +329,8 @@ class TestJSONBFields:
             participants=["user@example.com", "editor@example.com"],
             messages=[
                 {"from": "user@example.com", "body": "First message"},
-                {"from": "editor@example.com", "body": "Reply"}
-            ]
+                {"from": "editor@example.com", "body": "Reply"},
+            ],
         )
         db_session.add(email_thread)
         db_session.commit()
@@ -371,10 +356,7 @@ class TestEnumValidation:
 
         for status in valid_statuses:
             article = Article(
-                topic_id=topic.id,
-                title=f"Article {status}",
-                content="Content",
-                status=status
+                topic_id=topic.id, title=f"Article {status}", content="Content", status=status
             )
             db_session.add(article)
 
@@ -395,10 +377,7 @@ class TestEnumValidation:
         db_session.commit()
 
         article = Article(
-            topic_id=topic.id,
-            title="Test Article",
-            content="Content",
-            status="invalid_status"
+            topic_id=topic.id, title="Test Article", content="Content", status="invalid_status"
         )
         db_session.add(article)
         db_session.commit()
@@ -413,21 +392,14 @@ class TestEnumValidation:
         db_session.add(topic)
         db_session.commit()
 
-        article = Article(
-            topic_id=topic.id,
-            title="Test Article",
-            content="Content"
-        )
+        article = Article(topic_id=topic.id, title="Test Article", content="Content")
         db_session.add(article)
         db_session.commit()
 
         valid_states = ["idea", "researching", "drafting", "reviewing", "published"]
 
         for state in valid_states:
-            workflow = WorkflowState(
-                article_id=article.id,
-                state=state
-            )
+            workflow = WorkflowState(article_id=article.id, state=state)
             db_session.add(workflow)
 
         db_session.commit()
@@ -446,18 +418,11 @@ class TestEnumValidation:
         db_session.add(topic)
         db_session.commit()
 
-        article = Article(
-            topic_id=topic.id,
-            title="Test Article",
-            content="Content"
-        )
+        article = Article(topic_id=topic.id, title="Test Article", content="Content")
         db_session.add(article)
         db_session.commit()
 
-        workflow = WorkflowState(
-            article_id=article.id,
-            state="invalid_state"
-        )
+        workflow = WorkflowState(article_id=article.id, state="invalid_state")
         db_session.add(workflow)
         db_session.commit()
 
@@ -471,11 +436,7 @@ class TestEnumValidation:
         db_session.add(topic)
         db_session.commit()
 
-        article = Article(
-            topic_id=topic.id,
-            title="Test Article",
-            content="Content"
-        )
+        article = Article(topic_id=topic.id, title="Test Article", content="Content")
         db_session.add(article)
         db_session.commit()
 
@@ -483,9 +444,7 @@ class TestEnumValidation:
 
         for idx, status in enumerate(valid_statuses):
             email_thread = EmailThread(
-                article_id=article.id,
-                thread_id=f"thread{idx}",
-                status=status
+                article_id=article.id, thread_id=f"thread{idx}", status=status
             )
             db_session.add(email_thread)
 
@@ -505,18 +464,12 @@ class TestEnumValidation:
         db_session.add(topic)
         db_session.commit()
 
-        article = Article(
-            topic_id=topic.id,
-            title="Test Article",
-            content="Content"
-        )
+        article = Article(topic_id=topic.id, title="Test Article", content="Content")
         db_session.add(article)
         db_session.commit()
 
         email_thread = EmailThread(
-            article_id=article.id,
-            thread_id="thread123",
-            status="invalid_status"
+            article_id=article.id, thread_id="thread123", status="invalid_status"
         )
         db_session.add(email_thread)
         db_session.commit()
@@ -731,6 +684,7 @@ class TestTimestamps:
 
         # Small delay to ensure timestamp difference
         import time
+
         time.sleep(0.1)
 
         # Update topic
@@ -756,6 +710,7 @@ class TestTimestamps:
 
         # Small delay to ensure timestamp difference
         import time
+
         time.sleep(0.1)
 
         # Update article
@@ -785,6 +740,7 @@ class TestTimestamps:
 
         # Small delay to ensure timestamp difference
         import time
+
         time.sleep(0.1)
 
         # Update thread
@@ -817,11 +773,7 @@ class TestConstraints:
         import uuid
 
         # Try to create article with non-existent topic_id
-        article = Article(
-            topic_id=uuid.uuid4(),
-            title="Test Article",
-            content="Content"
-        )
+        article = Article(topic_id=uuid.uuid4(), title="Test Article", content="Content")
         db_session.add(article)
 
         with pytest.raises(IntegrityError):
@@ -832,10 +784,7 @@ class TestConstraints:
         import uuid
 
         # Try to create workflow with non-existent article_id
-        workflow = WorkflowState(
-            article_id=uuid.uuid4(),
-            state="drafting"
-        )
+        workflow = WorkflowState(article_id=uuid.uuid4(), state="drafting")
         db_session.add(workflow)
 
         with pytest.raises(IntegrityError):
@@ -846,10 +795,7 @@ class TestConstraints:
         import uuid
 
         # Try to create thread with non-existent article_id
-        thread = EmailThread(
-            article_id=uuid.uuid4(),
-            thread_id="thread123"
-        )
+        thread = EmailThread(article_id=uuid.uuid4(), thread_id="thread123")
         db_session.add(thread)
 
         with pytest.raises(IntegrityError):

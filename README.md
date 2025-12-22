@@ -9,7 +9,8 @@ A minimal, well-structured Python project for generating technical articles with
 - 📝 **Structured Logging** - JSON and standard format logging with configurable levels
 - ⚙️ **Configuration Management** - Pydantic-based settings with environment variable support
 - ✅ **Testing Ready** - Pytest configuration with comprehensive test coverage
-- 🔍 **Code Quality** - Pylint configured with 10.00/10 score (minimum 9.0/10 enforced)
+- 🔍 **Code Quality** - Ruff linter and formatter with comprehensive rule coverage
+- 🚀 **CI/CD Ready** - GitHub Actions workflow and pre-commit hooks configured
 
 ## Project Structure
 
@@ -32,10 +33,14 @@ tech-article-generator/
 │       └── test_models.py
 ├── docs/
 │   ├── DATABASE_SETUP.md   # Database setup guide
-│   └── PYLINT_SETUP.md     # Code quality guide
-├── pyproject.toml          # Poetry configuration
+│   ├── RUFF_SETUP.md      # Code quality and linting guide
+│   └── CI_CD_SETUP.md     # CI/CD configuration guide
+├── .github/
+│   └── workflows/
+│       └── ci.yml         # GitHub Actions CI/CD
+├── pyproject.toml          # Poetry & Ruff configuration
 ├── requirements.txt        # Pip dependencies
-├── .pylintrc              # Pylint configuration
+├── .pre-commit-config.yaml # Pre-commit hooks config
 ├── .env.example           # Environment template
 └── README.md              # This file
 ```
@@ -92,7 +97,7 @@ poetry shell
    DB_NAME=tech_articles
    DB_USER=your_user
    DB_PASSWORD=your_password
-   
+
    # Database Connection Pool
    DB_POOL_SIZE=5
    DB_MAX_OVERFLOW=10
@@ -165,22 +170,29 @@ pytest -v
 
 ## Code Quality
 
-This project maintains a **10.00/10 pylint score** with a minimum requirement of **9.0/10**.
+This project uses **Ruff** - an extremely fast Python linter and formatter written in Rust.
 
 ```bash
 # Check code quality
-pylint src/
+poetry run ruff check .
 
-# Expected output:
-# Your code has been rated at 10.00/10
+# Auto-fix issues
+poetry run ruff check . --fix
+
+# Format code
+poetry run ruff format .
+
+# Run all checks (pre-commit simulation)
+poetry run pre-commit run --all-files
 ```
 
-For more details on code quality standards, see the [Pylint Configuration Guide](docs/PYLINT_SETUP.md).
+For more details on code quality standards, see the [Ruff Configuration Guide](docs/RUFF_SETUP.md) and [CI/CD Setup Guide](docs/CI_CD_SETUP.md).
 
 ## Documentation
 
 - 📚 **[Database Setup Guide](docs/DATABASE_SETUP.md)** - Comprehensive guide for database configuration, connection management, and best practices
-- 🔍 **[Pylint Configuration Guide](docs/PYLINT_SETUP.md)** - Code quality standards, CI/CD integration, and troubleshooting
+- 🔍 **[Ruff Configuration Guide](docs/RUFF_SETUP.md)** - Linting and formatting standards, rules, and best practices
+- 🚀 **[CI/CD Setup Guide](docs/CI_CD_SETUP.md)** - GitHub Actions workflow and pre-commit hooks configuration
 
 ## Development
 
@@ -189,15 +201,17 @@ For more details on code quality standards, see the [Pylint Configuration Guide]
 1. Create feature branch
 2. Write tests first (TDD approach)
 3. Implement feature
-4. Ensure pylint score ≥ 9.0
+4. Ensure ruff checks pass (pre-commit hooks handle this automatically)
 5. Run tests: `pytest`
 6. Submit pull request
 
 ### Pre-commit Checklist
 
-- [ ] All tests pass (`pytest`)
-- [ ] Code quality check passes (`pylint src/`)
-- [ ] No errors or warnings
+Pre-commit hooks automatically handle most of these:
+
+- [ ] All tests pass (`poetry run pytest`)
+- [ ] Ruff checks pass (`poetry run ruff check .`)
+- [ ] Code is formatted (`poetry run ruff format .`)
 - [ ] Documentation updated
 - [ ] Environment variables documented in `.env.example`
 
@@ -218,7 +232,8 @@ For more details on code quality standards, see the [Pylint Configuration Guide]
 **Development:**
 
 - pytest 7.4+ - Testing framework
-- pylint 3.0+ - Code quality checker
+- ruff 0.8+ - Fast Python linter and formatter
+- pre-commit 3.8+ - Git hook framework
 
 ## License
 
@@ -229,9 +244,9 @@ For more details on code quality standards, see the [Pylint Configuration Guide]
 Contributions are welcome! Please ensure:
 
 1. Code passes all tests
-2. Pylint score ≥ 9.0
+2. Ruff checks pass (pre-commit hooks will run automatically)
 3. Documentation is updated
-4. Follow existing code style
+4. Follow existing code style (enforced by ruff formatter)
 
 ## Support
 
@@ -247,5 +262,6 @@ For issues and questions:
 
 - Database: Configured with retry logic
 - Logging: Structured logging enabled
-- Testing: Comprehensive test coverage
-- Code Quality: 10.00/10 pylint score
+- Testing: 135/135 tests passing
+- Code Quality: All ruff checks passing
+- CI/CD: GitHub Actions and pre-commit hooks configured

@@ -27,14 +27,14 @@ class GUID(TypeDecorator):  # pylint: disable=abstract-method,too-many-ancestors
     cache_ok = True
 
     def load_dialect_impl(self, dialect):
-        if dialect.name == 'postgresql':
+        if dialect.name == "postgresql":
             return dialect.type_descriptor(UUID(as_uuid=True))
         return dialect.type_descriptor(String(36))
 
     def process_bind_param(self, value, dialect):
         if value is None:
             return value
-        if dialect.name == 'postgresql':
+        if dialect.name == "postgresql":
             return value
         if isinstance(value, uuid.UUID):
             return str(value)
@@ -98,6 +98,7 @@ def db_session():
                 from sqlalchemy.dialects.postgresql import (
                     UUID as PG_UUID,  # pylint: disable=import-outside-toplevel,reimported
                 )
+
                 column.type = PG_UUID(as_uuid=True)
                 column.default = None
             elif isinstance(column.type, JSON):
@@ -121,7 +122,7 @@ def test_create_topic_with_all_fields(db_session: Session):
         name="Python",
         description="Python programming language",
         keywords=["python", "programming", "coding"],
-        metadata={"difficulty": "beginner"}
+        metadata={"difficulty": "beginner"},
     )
 
     db_session.commit()
@@ -211,7 +212,7 @@ def test_update_topic_multiple_fields(db_session: Session):
         topic.id,
         description="iOS development language",
         keywords=["swift", "ios", "apple"],
-        metadata={"platform": "iOS"}
+        metadata={"platform": "iOS"},
     )
     db_session.commit()
 
@@ -262,7 +263,7 @@ def test_create_article_with_all_fields(db_session: Session):
         topic_id=topic.id,
         title="Introduction to Django",
         content="Django is a web framework...",
-        metadata={"author": "John Doe"}
+        metadata={"author": "John Doe"},
     )
     db_session.commit()
 
@@ -281,12 +282,7 @@ def test_create_article_with_content_none(db_session: Session):
     topic = create_topic(db_session, name="Flask")
     db_session.commit()
 
-    article = create_article(
-        db_session,
-        topic_id=topic.id,
-        title="Flask Tutorial",
-        content=None
-    )
+    article = create_article(db_session, topic_id=topic.id, title="Flask Tutorial", content=None)
     db_session.commit()
 
     assert article.content == ""
@@ -298,11 +294,7 @@ def test_create_article_minimal_fields(db_session: Session):
     topic = create_topic(db_session, name="FastAPI")
     db_session.commit()
 
-    article = create_article(
-        db_session,
-        topic_id=topic.id,
-        title="FastAPI Basics"
-    )
+    article = create_article(db_session, topic_id=topic.id, title="FastAPI Basics")
     db_session.commit()
 
     assert article.title == "FastAPI Basics"
@@ -315,11 +307,7 @@ def test_create_article_invalid_topic(db_session: Session):
     from uuid import uuid4  # pylint: disable=import-outside-toplevel
 
     with pytest.raises(IntegrityError):
-        create_article(
-            db_session,
-            topic_id=uuid4(),
-            title="Invalid Article"
-        )
+        create_article(db_session, topic_id=uuid4(), title="Invalid Article")
         db_session.commit()
 
 
@@ -369,7 +357,7 @@ def test_update_article_multiple_fields(db_session: Session):
         article.id,
         content="Full content here",
         metadata={"tags": ["frontend", "spa"]},
-        status="in_review"
+        status="in_review",
     )
     db_session.commit()
 
@@ -387,7 +375,7 @@ def test_update_article_only_specified_fields(db_session: Session):
         topic_id=topic.id,
         title="Original Title",
         content="Original Content",
-        metadata={"version": "1.0"}
+        metadata={"version": "1.0"},
     )
     db_session.commit()
 

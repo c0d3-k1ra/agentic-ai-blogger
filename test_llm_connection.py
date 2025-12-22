@@ -20,12 +20,13 @@ async def main():
         # Test with custom model
         result2 = await generate_text(
             "Say hello in one sentence",
-            model="gemini-2.5-flash"  # Optional: test different model
+            model="gemini-2.5-flash",  # Optional: test different model
         )
         print(f"\nWith custom model: {result2}")
 
     except Exception as e:
         print(f"✗ Error: {e}")
+
 
 if __name__ == "__main__":
     asyncio.run(main())

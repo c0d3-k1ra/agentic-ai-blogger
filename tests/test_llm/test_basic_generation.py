@@ -63,9 +63,7 @@ class TestBasicGeneration:
     """Test basic text generation functionality."""
 
     @pytest.mark.asyncio
-    async def test_generate_text_returns_string(
-        self, env_vars_gemini, mock_litellm_response
-    ):
+    async def test_generate_text_returns_string(self, env_vars_gemini, mock_litellm_response):
         """Test that generate_text returns non-empty string."""
         with patch("litellm.acompletion", new_callable=AsyncMock) as mock_completion:
             mock_completion.return_value = mock_litellm_response
@@ -78,9 +76,7 @@ class TestBasicGeneration:
             mock_completion.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_provider_switching_via_env_gemini(
-        self, env_vars_gemini, mock_litellm_response
-    ):
+    async def test_provider_switching_via_env_gemini(self, env_vars_gemini, mock_litellm_response):
         """Test Gemini provider selection from environment."""
         with patch("litellm.acompletion", new_callable=AsyncMock) as mock_completion:
             mock_completion.return_value = mock_litellm_response
@@ -94,9 +90,7 @@ class TestBasicGeneration:
             assert call_kwargs["api_key"] == "test-gemini-key"
 
     @pytest.mark.asyncio
-    async def test_provider_switching_via_env_openai(
-        self, env_vars_openai, mock_litellm_response
-    ):
+    async def test_provider_switching_via_env_openai(self, env_vars_openai, mock_litellm_response):
         """Test OpenAI provider selection from environment."""
         with patch("litellm.acompletion", new_callable=AsyncMock) as mock_completion:
             mock_completion.return_value = mock_litellm_response
@@ -110,9 +104,7 @@ class TestBasicGeneration:
             assert call_kwargs["api_key"] == "test-openai-key"
 
     @pytest.mark.asyncio
-    async def test_retries_on_transient_failure(
-        self, env_vars_gemini, mock_litellm_response
-    ):
+    async def test_retries_on_transient_failure(self, env_vars_gemini, mock_litellm_response):
         """Test retry logic on temporary failures."""
         with patch("litellm.acompletion", new_callable=AsyncMock) as mock_completion:
             # Fail twice, succeed on third attempt
@@ -143,9 +135,7 @@ class TestBasicGeneration:
             assert mock_completion.call_count == 4
 
     @pytest.mark.asyncio
-    async def test_uses_custom_model_when_provided(
-        self, env_vars_gemini, mock_litellm_response
-    ):
+    async def test_uses_custom_model_when_provided(self, env_vars_gemini, mock_litellm_response):
         """Test model override parameter."""
         with patch("litellm.acompletion", new_callable=AsyncMock) as mock_completion:
             mock_completion.return_value = mock_litellm_response
@@ -157,9 +147,7 @@ class TestBasicGeneration:
             assert call_kwargs["model"] == "gemini-1.5-pro"
 
     @pytest.mark.asyncio
-    async def test_respects_temperature_parameter(
-        self, env_vars_gemini, mock_litellm_response
-    ):
+    async def test_respects_temperature_parameter(self, env_vars_gemini, mock_litellm_response):
         """Test temperature parameter is passed correctly."""
         with patch("litellm.acompletion", new_callable=AsyncMock) as mock_completion:
             mock_completion.return_value = mock_litellm_response
@@ -221,9 +209,7 @@ class TestBasicGeneration:
                 assert delays[1] == 0.2  # 0.1 * (2^1)
 
     @pytest.mark.asyncio
-    async def test_rate_limit_error_is_retryable(
-        self, env_vars_gemini, mock_litellm_response
-    ):
+    async def test_rate_limit_error_is_retryable(self, env_vars_gemini, mock_litellm_response):
         """Test that rate limit errors trigger retries."""
         with patch("litellm.acompletion", new_callable=AsyncMock) as mock_completion:
             # Rate limit error, then success
@@ -238,9 +224,7 @@ class TestBasicGeneration:
             assert mock_completion.call_count == 2
 
     @pytest.mark.asyncio
-    async def test_server_error_is_retryable(
-        self, env_vars_gemini, mock_litellm_response
-    ):
+    async def test_server_error_is_retryable(self, env_vars_gemini, mock_litellm_response):
         """Test that 5xx server errors trigger retries."""
         with patch("litellm.acompletion", new_callable=AsyncMock) as mock_completion:
             # Server error, then success
@@ -255,9 +239,7 @@ class TestBasicGeneration:
             assert mock_completion.call_count == 2
 
     @pytest.mark.asyncio
-    async def test_passes_correct_message_format(
-        self, env_vars_gemini, mock_litellm_response
-    ):
+    async def test_passes_correct_message_format(self, env_vars_gemini, mock_litellm_response):
         """Test that prompt is formatted correctly in messages."""
         with patch("litellm.acompletion", new_callable=AsyncMock) as mock_completion:
             mock_completion.return_value = mock_litellm_response
@@ -266,14 +248,10 @@ class TestBasicGeneration:
 
             # Verify message format
             call_kwargs = mock_completion.call_args.kwargs
-            assert call_kwargs["messages"] == [
-                {"role": "user", "content": "Test prompt"}
-            ]
+            assert call_kwargs["messages"] == [{"role": "user", "content": "Test prompt"}]
 
     @pytest.mark.asyncio
-    async def test_timeout_configuration(
-        self, env_vars_gemini, mock_litellm_response, monkeypatch
-    ):
+    async def test_timeout_configuration(self, env_vars_gemini, mock_litellm_response, monkeypatch):
         """Test that timeout is configured correctly."""
         monkeypatch.setenv("LLM_TIMEOUT", "60")
         reset_settings()  # Reset to pick up new timeout
@@ -292,9 +270,7 @@ class TestCustomEndpoint:
     """Test custom LLM endpoint functionality."""
 
     @pytest.mark.asyncio
-    async def test_custom_endpoint_takes_priority(
-        self, monkeypatch, mock_litellm_response
-    ):
+    async def test_custom_endpoint_takes_priority(self, monkeypatch, mock_litellm_response):
         """Test that custom endpoint overrides provider config."""
         # Set up both provider and custom endpoint
         monkeypatch.setenv("APP_NAME", "test-app")
@@ -317,12 +293,12 @@ class TestCustomEndpoint:
             call_kwargs = mock_completion.call_args.kwargs
             assert call_kwargs["base_url"] == "http://localhost:11434/v1"
             assert call_kwargs["model"] == "llama2"
-            assert call_kwargs["custom_llm_provider"] == "openai"  # Custom endpoints use openai provider
+            assert (
+                call_kwargs["custom_llm_provider"] == "openai"
+            )  # Custom endpoints use openai provider
 
     @pytest.mark.asyncio
-    async def test_custom_endpoint_with_api_key(
-        self, monkeypatch, mock_litellm_response
-    ):
+    async def test_custom_endpoint_with_api_key(self, monkeypatch, mock_litellm_response):
         """Test custom endpoint with API key."""
         monkeypatch.setenv("APP_NAME", "test-app")
         monkeypatch.setenv("ENVIRONMENT", "development")
@@ -344,9 +320,7 @@ class TestCustomEndpoint:
             assert call_kwargs["base_url"] == "http://remote-server:8000/v1"
 
     @pytest.mark.asyncio
-    async def test_custom_endpoint_model_override(
-        self, monkeypatch, mock_litellm_response
-    ):
+    async def test_custom_endpoint_model_override(self, monkeypatch, mock_litellm_response):
         """Test that function parameter overrides CUSTOM_LLM_MODEL."""
         monkeypatch.setenv("APP_NAME", "test-app")
         monkeypatch.setenv("ENVIRONMENT", "development")
@@ -385,9 +359,7 @@ class TestCustomEndpoint:
             assert call_kwargs["api_key"] == "test-gemini-key"
 
     @pytest.mark.asyncio
-    async def test_custom_endpoint_without_api_key(
-        self, monkeypatch, mock_litellm_response
-    ):
+    async def test_custom_endpoint_without_api_key(self, monkeypatch, mock_litellm_response):
         """Test custom endpoint without API key (e.g., local Ollama)."""
         monkeypatch.setenv("APP_NAME", "test-app")
         monkeypatch.setenv("ENVIRONMENT", "development")

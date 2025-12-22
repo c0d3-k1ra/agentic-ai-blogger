@@ -82,7 +82,8 @@ def setup_logging(use_json: bool = False, force_reconfigure: bool = False) -> No
     # Remove only our own StreamHandler to prevent duplicates
     # Preserve other handlers (like pytest's caplog handler)
     handlers_to_remove = [
-        h for h in root_logger.handlers
+        h
+        for h in root_logger.handlers
         if isinstance(h, logging.StreamHandler) and h.stream == sys.stdout
     ]
     for handler in handlers_to_remove:
@@ -115,7 +116,7 @@ def setup_logging(use_json: bool = False, force_reconfigure: bool = False) -> No
     logger.debug(
         "Logging configured: level=%s, format=%s",
         settings.LOG_LEVEL,
-        'json' if use_json else 'standard'
+        "json" if use_json else "standard",
     )
 
 
