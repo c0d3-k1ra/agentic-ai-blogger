@@ -11,21 +11,19 @@ This module defines the core SQLAlchemy models using PostgreSQL-specific feature
 from datetime import datetime
 from typing import List
 
-from sqlalchemy import (Column, DateTime, Enum, ForeignKey, Index, String,
-                        Text, event, text)
+from sqlalchemy import DateTime, Enum, ForeignKey, Index, String, Text, event, text
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
 class Base(DeclarativeBase):
     """Base class for all database models."""
-    pass
 
 
 class Topic(Base):
     """
     Topic model representing article categories/subjects.
-    
+
     Relationships:
     - One-to-many with Article (RESTRICT on delete - cannot delete topic with articles)
     """
@@ -80,7 +78,7 @@ class Topic(Base):
 class Article(Base):
     """
     Article model representing generated articles.
-    
+
     Relationships:
     - Many-to-one with Topic (RESTRICT on Topic delete)
     - One-to-many with WorkflowState (CASCADE on Article delete)
@@ -155,13 +153,14 @@ class Article(Base):
     )
 
     def __repr__(self) -> str:
-        return f"<Article(id={self.id}, title={self.title}, status={self.status})>"
+        return (f"<Article(id={self.id}, title={self.title}, "
+                f"status={self.status})>")
 
 
 class WorkflowState(Base):
     """
     WorkflowState model tracking article workflow progression.
-    
+
     Relationships:
     - Many-to-one with Article (CASCADE on Article delete)
     """
@@ -220,13 +219,14 @@ class WorkflowState(Base):
     )
 
     def __repr__(self) -> str:
-        return f"<WorkflowState(id={self.id}, article_id={self.article_id}, state={self.state})>"
+        return (f"<WorkflowState(id={self.id}, article_id={self.article_id}, "
+                f"state={self.state})>")
 
 
 class EmailThread(Base):
     """
     EmailThread model tracking email conversations about articles.
-    
+
     Relationships:
     - Many-to-one with Article (CASCADE on Article delete)
     """
@@ -295,25 +295,26 @@ class EmailThread(Base):
     )
 
     def __repr__(self) -> str:
-        return f"<EmailThread(id={self.id}, article_id={self.article_id}, status={self.status})>"
+        return (f"<EmailThread(id={self.id}, article_id={self.article_id}, "
+                f"status={self.status})>")
 
 
 # Event listener for auto-updating updated_at on Topic
 @event.listens_for(Topic, "before_update")
-def receive_before_update_topic(mapper, connection, target):
+def receive_before_update_topic(_mapper, _connection, target):
     """Update the updated_at timestamp before updating a Topic."""
     target.updated_at = datetime.utcnow()
 
 
 # Event listener for auto-updating updated_at on Article
 @event.listens_for(Article, "before_update")
-def receive_before_update_article(mapper, connection, target):
+def receive_before_update_article(_mapper, _connection, target):
     """Update the updated_at timestamp before updating an Article."""
     target.updated_at = datetime.utcnow()
 
 
 # Event listener for auto-updating updated_at on EmailThread
 @event.listens_for(EmailThread, "before_update")
-def receive_before_update_email_thread(mapper, connection, target):
+def receive_before_update_email_thread(_mapper, _connection, target):
     """Update the updated_at timestamp before updating an EmailThread."""
     target.updated_at = datetime.utcnow()
