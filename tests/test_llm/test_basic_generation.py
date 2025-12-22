@@ -36,6 +36,11 @@ def env_vars_gemini(monkeypatch):
     monkeypatch.setenv("LLM_DEFAULT_MODEL", "gemini-1.5-flash")
     monkeypatch.setenv("LLM_MAX_RETRIES", "3")
     monkeypatch.setenv("LLM_RETRY_DELAY", "0.1")  # Fast retries for tests
+    # Unset custom endpoint variables to prevent .env file pollution
+    monkeypatch.delenv("CUSTOM_LLM_BASE_URL", raising=False)
+    monkeypatch.delenv("CUSTOM_LLM_API_KEY", raising=False)
+    monkeypatch.delenv("CUSTOM_LLM_MODEL", raising=False)
+    reset_settings()  # Force reload with new env vars
 
 
 @pytest.fixture
@@ -48,6 +53,11 @@ def env_vars_openai(monkeypatch):
     monkeypatch.setenv("LLM_DEFAULT_MODEL", "gpt-4")
     monkeypatch.setenv("LLM_MAX_RETRIES", "3")
     monkeypatch.setenv("LLM_RETRY_DELAY", "0.1")
+    # Unset custom endpoint variables to prevent .env file pollution
+    monkeypatch.delenv("CUSTOM_LLM_BASE_URL", raising=False)
+    monkeypatch.delenv("CUSTOM_LLM_API_KEY", raising=False)
+    monkeypatch.delenv("CUSTOM_LLM_MODEL", raising=False)
+    reset_settings()  # Force reload with new env vars
 
 
 class TestBasicGeneration:
@@ -295,6 +305,9 @@ class TestCustomEndpoint:
         monkeypatch.setenv("LLM_DEFAULT_MODEL", "gemini-1.5-flash")
         monkeypatch.setenv("CUSTOM_LLM_BASE_URL", "http://localhost:11434/v1")
         monkeypatch.setenv("CUSTOM_LLM_MODEL", "llama2")
+        # Ensure no custom API key
+        monkeypatch.delenv("CUSTOM_LLM_API_KEY", raising=False)
+        reset_settings()
 
         with patch("litellm.acompletion", new_callable=AsyncMock) as mock_completion:
             mock_completion.return_value = mock_litellm_response
@@ -305,7 +318,7 @@ class TestCustomEndpoint:
             call_kwargs = mock_completion.call_args.kwargs
             assert call_kwargs["base_url"] == "http://localhost:11434/v1"
             assert call_kwargs["model"] == "llama2"
-            assert call_kwargs["custom_llm_provider"] is None  # Auto-detect
+            assert call_kwargs["custom_llm_provider"] == "openai"  # Custom endpoints use openai provider
 
     @pytest.mark.asyncio
     async def test_custom_endpoint_with_api_key(
@@ -319,6 +332,7 @@ class TestCustomEndpoint:
         monkeypatch.setenv("CUSTOM_LLM_BASE_URL", "http://remote-server:8000/v1")
         monkeypatch.setenv("CUSTOM_LLM_API_KEY", "custom-api-key")
         monkeypatch.setenv("CUSTOM_LLM_MODEL", "custom-model")
+        reset_settings()
 
         with patch("litellm.acompletion", new_callable=AsyncMock) as mock_completion:
             mock_completion.return_value = mock_litellm_response
@@ -341,6 +355,8 @@ class TestCustomEndpoint:
         monkeypatch.setenv("LLM_API_KEY", "test-gemini-key")
         monkeypatch.setenv("CUSTOM_LLM_BASE_URL", "http://localhost:11434/v1")
         monkeypatch.setenv("CUSTOM_LLM_MODEL", "llama2")
+        monkeypatch.delenv("CUSTOM_LLM_API_KEY", raising=False)
+        reset_settings()
 
         with patch("litellm.acompletion", new_callable=AsyncMock) as mock_completion:
             mock_completion.return_value = mock_litellm_response
@@ -380,7 +396,9 @@ class TestCustomEndpoint:
         monkeypatch.setenv("LLM_API_KEY", "test-gemini-key")
         monkeypatch.setenv("CUSTOM_LLM_BASE_URL", "http://localhost:11434/v1")
         monkeypatch.setenv("CUSTOM_LLM_MODEL", "llama2")
-        # No CUSTOM_LLM_API_KEY set
+        # Explicitly unset CUSTOM_LLM_API_KEY
+        monkeypatch.delenv("CUSTOM_LLM_API_KEY", raising=False)
+        reset_settings()
 
         with patch("litellm.acompletion", new_callable=AsyncMock) as mock_completion:
             mock_completion.return_value = mock_litellm_response
@@ -403,7 +421,10 @@ class TestCustomEndpoint:
         monkeypatch.setenv("LLM_API_KEY", "test-gemini-key")
         monkeypatch.setenv("LLM_DEFAULT_MODEL", "default-model")
         monkeypatch.setenv("CUSTOM_LLM_BASE_URL", "http://localhost:11434/v1")
-        # No CUSTOM_LLM_MODEL set
+        # Explicitly unset CUSTOM_LLM_MODEL and API_KEY
+        monkeypatch.delenv("CUSTOM_LLM_MODEL", raising=False)
+        monkeypatch.delenv("CUSTOM_LLM_API_KEY", raising=False)
+        reset_settings()
 
         with patch("litellm.acompletion", new_callable=AsyncMock) as mock_completion:
             mock_completion.return_value = mock_litellm_response
