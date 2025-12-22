@@ -29,20 +29,24 @@ class TestSettings:
         """Test that missing required fields raise explicit ValidationError."""
         # Only set one required field
         monkeypatch.setenv("APP_NAME", "test-app")
-        # Missing ENVIRONMENT
+        # Missing ENVIRONMENT - explicitly delete it in case it's in .env
+        monkeypatch.delenv("ENVIRONMENT", raising=False)
         
         with pytest.raises(ValidationError) as exc_info:
-            Settings()
+            Settings(_env_file=None)  # Disable .env file loading
         
         # Check that the error mentions the missing field
         error_str = str(exc_info.value)
         assert "ENVIRONMENT" in error_str
     
-    def test_missing_all_required_fields_raises_error(self) -> None:
+    def test_missing_all_required_fields_raises_error(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Test that missing all required fields raises ValidationError."""
-        # Clear any environment variables
+        # Clear any environment variables including those from .env
+        monkeypatch.delenv("APP_NAME", raising=False)
+        monkeypatch.delenv("ENVIRONMENT", raising=False)
+        
         with pytest.raises(ValidationError) as exc_info:
-            Settings()
+            Settings(_env_file=None)  # Disable .env file loading
         
         error_str = str(exc_info.value)
         assert "APP_NAME" in error_str or "ENVIRONMENT" in error_str
@@ -212,7 +216,15 @@ class TestGetSettings:
         assert settings1.APP_NAME == "test-app"
         assert settings2.APP_NAME == "different-app"
     
-    def test_get_settings_raises_error_on_missing_required_fields(self) -> None:
+    def test_get_settings_raises_error_on_missing_required_fields(self, monkeypatch: pytest.MonkeyPatch, tmp_path: Any) -> None:
         """Test that get_settings raises ValidationError when required fields are missing."""
+        # Clear required fields including those from .env
+        monkeypatch.delenv("APP_NAME", raising=False)
+        monkeypatch.delenv("ENVIRONMENT", raising=False)
+        
+        # Point to a non-existent .env file to prevent loading from actual .env
+        fake_env = tmp_path / "fake.env"
+        monkeypatch.chdir(tmp_path)
+        
         with pytest.raises(ValidationError):
             get_settings()

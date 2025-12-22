@@ -55,9 +55,13 @@ class TestDatabaseInitialization:
             assert kwargs["pool_timeout"] == 30
             assert kwargs["pool_pre_ping"] is True
     
-    def test_init_db_raises_error_without_database_url(self):
+    def test_init_db_raises_error_without_database_url(self, monkeypatch, tmp_path):
         """Test that init_db raises error when DATABASE_URL is not set."""
-        del os.environ["DATABASE_URL"]
+        monkeypatch.delenv("DATABASE_URL", raising=False)
+        monkeypatch.setenv("APP_NAME", "test-app")
+        monkeypatch.setenv("ENVIRONMENT", "development")
+        # Change to tmp directory to avoid loading .env
+        monkeypatch.chdir(tmp_path)
         reset_settings()
         
         with pytest.raises(DatabaseConnectionError) as exc_info:

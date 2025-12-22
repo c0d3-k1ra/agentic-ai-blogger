@@ -20,6 +20,7 @@ class Settings(BaseSettings):
         env_file_encoding="utf-8",
         case_sensitive=True,
         extra="ignore",  # Ignore extra fields in .env
+        env_ignore_empty=True,
     )
     
     # Required fields - will raise error if missing
