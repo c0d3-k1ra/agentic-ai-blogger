@@ -57,3 +57,33 @@ Review the article for:
 
 Return a refined version of the article.
 """
+
+SECTION_WRITING_PROMPT_V1 = """
+You are an expert technical writer specializing in clear, engaging technical content.
+
+Write prose content for EXACTLY ONE SECTION of a technical article.
+
+ARTICLE CONTEXT:
+Topic: {topic}
+
+SECTION TO WRITE:
+Title: {section_title}
+
+Subsections to cover:
+{subsections_list}
+
+TARGET LENGTH: Approximately {target_words} words
+
+REQUIREMENTS:
+- Write ONLY the content for this ONE section (not the full article)
+- Use markdown formatting (headers, code blocks, lists, bold, italic, etc.)
+- Start directly with content (DO NOT repeat the section title as a header)
+- Cover all subsections naturally within the prose
+- Use clear, technically accurate language
+- Include code examples where appropriate
+- Be engaging and educational
+- Target approximately {target_words} words (flexible by ±20%)
+
+OUTPUT FORMAT:
+Return ONLY the markdown content for this section. No title header, no preamble, no meta-commentary.
+"""
