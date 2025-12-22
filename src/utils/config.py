@@ -177,10 +177,10 @@ class Settings(BaseSettings):
 
     def get_llm_api_key(self) -> str:
         """Get the LLM API key value.
-        
+
         Returns:
             str: The LLM API key
-            
+
         Raises:
             ValueError: If LLM_API_KEY is not configured
         """
@@ -193,7 +193,7 @@ class Settings(BaseSettings):
 
     def get_custom_llm_api_key(self) -> str | None:
         """Get the custom LLM API key value if set.
-        
+
         Returns:
             str | None: The custom LLM API key, or None if not configured
         """

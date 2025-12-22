@@ -1,6 +1,5 @@
 """Tests for LLM client basic text generation."""
 
-import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest

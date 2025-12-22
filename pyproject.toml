@@ -16,7 +16,39 @@ litellm = "^1.0.0"
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.0.0"
 pytest-asyncio = "^0.21.0"
-pylint = "^3.0.0"
+ruff = "^0.14.10"
+
+[tool.ruff]
+# Same line length as pylint
+line-length = 100
+
+# Exclude patterns
+exclude = [
+    ".env",
+    ".git",
+    ".pytest_cache",
+    ".ruff_cache",
+    ".venv",
+    "__pycache__",
+    "*.egg-info",
+]
+
+[tool.ruff.lint]
+# Enable pycodestyle (E, W), pyflakes (F), and isort (I) rules
+select = ["E", "F", "W", "I"]
+
+# Allow autofix for all enabled rules
+fixable = ["ALL"]
+unfixable = []
+
+[tool.ruff.lint.per-file-ignores]
+# Tests can have additional flexibility
+"tests/**/*.py" = [
+    "E501",  # line-too-long (tests can have long strings)
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["src"]
 
 [build-system]
 requires = ["poetry-core"]

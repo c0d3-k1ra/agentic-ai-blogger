@@ -8,9 +8,15 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, sessionmaker
 
-from src.database.db import (create_article, create_topic, get_article_by_id,
-                             get_topic_by_id, get_topic_by_name,
-                             update_article, update_topic)
+from src.database.db import (
+    create_article,
+    create_topic,
+    get_article_by_id,
+    get_topic_by_id,
+    get_topic_by_name,
+    update_article,
+    update_topic,
+)
 from src.database.models import Base
 
 
@@ -45,11 +51,11 @@ class GUID(TypeDecorator):  # pylint: disable=abstract-method,too-many-ancestors
 @pytest.fixture(scope="function")
 def db_session():
     """Create a test database session with UUID and JSONB support for SQLite."""
-    from sqlalchemy import JSON  # pylint: disable=import-outside-toplevel
-    from sqlalchemy import \
-        ColumnDefault  # pylint: disable=import-outside-toplevel
-    from sqlalchemy.dialects.postgresql import \
-        JSONB  # pylint: disable=import-outside-toplevel
+    from sqlalchemy import (
+        JSON,  # pylint: disable=import-outside-toplevel
+        ColumnDefault,  # pylint: disable=import-outside-toplevel
+    )
+    from sqlalchemy.dialects.postgresql import JSONB  # pylint: disable=import-outside-toplevel
 
     # Replace UUID and JSONB types for SQLite compatibility
     @event.listens_for(Base.metadata, "before_create")
@@ -89,9 +95,9 @@ def db_session():
     for table in Base.metadata.tables.values():
         for column in table.columns:
             if isinstance(column.type, GUID):
-                from sqlalchemy.dialects.postgresql import \
-                    UUID as \
-                    PG_UUID  # pylint: disable=import-outside-toplevel,reimported
+                from sqlalchemy.dialects.postgresql import (
+                    UUID as PG_UUID,  # pylint: disable=import-outside-toplevel,reimported
+                )
                 column.type = PG_UUID(as_uuid=True)
                 column.default = None
             elif isinstance(column.type, JSON):
