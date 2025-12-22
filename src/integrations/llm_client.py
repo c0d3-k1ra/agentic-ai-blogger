@@ -5,16 +5,26 @@ using LiteLLM, with Gemini as the default provider and optional OpenAI support.
 
 Public API:
     generate_text: Generate text from a prompt using configured LLM provider
+    generate_structured: Generate structured output matching a Pydantic schema
     LLMRetryExhausted: Exception raised when retries are exhausted
 
 Example:
     >>> text = await generate_text("Write a short poem about Python")
     >>> print(text)
+
+    >>> from pydantic import BaseModel
+    >>> class Person(BaseModel):
+    ...     name: str
+    ...     age: int
+    >>> person = await generate_structured("Extract person info: John is 30", schema=Person)
+    >>> print(person.name, person.age)
 """
 
 import asyncio
+import json
 
 import litellm
+from pydantic import BaseModel, ValidationError
 
 from src.utils.config import get_settings
 from src.utils.logging_config import get_logger
@@ -34,6 +44,34 @@ class LLMRetryExhausted(Exception):
 
     The original exception is attached as the cause via exception chaining.
     """
+
+
+def _strip_markdown_json(text: str) -> str:
+    """Strip markdown code fences from JSON text.
+
+    Many LLMs wrap JSON in markdown code blocks despite instructions not to.
+    This function removes those wrappers to enable clean JSON parsing.
+
+    Args:
+        text: Raw text that may contain markdown-wrapped JSON
+
+    Returns:
+        Cleaned text with markdown fences removed
+    """
+    text = text.strip()
+
+    # Remove markdown code fences: ```json ... ``` or ``` ... ```
+    if text.startswith("```"):
+        # Find the end of the opening fence (could be ```json or just ```)
+        first_newline = text.find("\n")
+        if first_newline != -1:
+            text = text[first_newline + 1 :]
+
+        # Remove closing fence
+        if text.endswith("```"):
+            text = text[:-3]
+
+    return text.strip()
 
 
 def _is_retryable_error(error: Exception) -> bool:
@@ -299,3 +337,179 @@ async def generate_text(
         config=config,
         temperature=temperature,
     )
+
+
+async def generate_structured(
+    prompt: str,
+    *,
+    schema: type[BaseModel],
+    model: str | None = None,
+    temperature: float = 0.0,
+) -> BaseModel:
+    """Generate structured output matching a Pydantic schema.
+
+    This function generates LLM output that strictly conforms to a Pydantic schema,
+    with automatic retries on JSON parsing or validation failures. It builds on top
+    of generate_text with an independent retry budget for validation errors.
+
+    Args:
+        prompt: Plain text prompt describing what to generate
+        schema: Pydantic BaseModel subclass defining the expected output structure
+        model: Optional model override (plain ID like 'gpt-4', 'gemini-2.5-flash').
+               If not provided, uses LLM_DEFAULT_MODEL or CUSTOM_LLM_MODEL from config.
+        temperature: Sampling temperature for generation (default: 0.0 for determinism).
+                    Lower values are more deterministic, higher more creative.
+
+    Returns:
+        Instance of the provided schema, validated and populated with LLM output
+
+    Raises:
+        ValueError: If prompt is empty, schema is invalid, or temperature is out of range
+        LLMRetryExhausted: When retries are exhausted for JSON parsing or validation errors
+
+    Example:
+        >>> from pydantic import BaseModel
+        >>> class Article(BaseModel):
+        ...     title: str
+        ...     summary: str
+        ...     tags: list[str]
+        >>> article = await generate_structured(
+        ...     "Write an article about Python",
+        ...     schema=Article
+        ... )
+        >>> print(article.title)
+
+    Notes:
+        - LLM is instructed to return ONLY valid JSON matching the schema
+        - No markdown, no code blocks, no explanations
+        - Extra fields in output cause validation failure
+        - Missing required fields cause validation failure
+        - Retry budget is independent from generate_text (uses same config values)
+        - Total attempts = 1 initial + LLM_MAX_RETRIES
+        - Logs schema name and attempt count (never full output or prompt)
+    """
+    # Validate inputs
+    if not prompt or not prompt.strip():
+        raise ValueError("Prompt cannot be empty")
+
+    if not isinstance(schema, type) or not issubclass(schema, BaseModel):
+        raise ValueError("schema must be a Pydantic BaseModel subclass")
+
+    if not 0.0 <= temperature <= 2.0:
+        raise ValueError("Temperature must be between 0.0 and 2.0")
+
+    # Get configuration
+    settings = get_settings()
+    logger = _get_logger()
+    config = _get_llm_config(model)
+    max_retries = settings.LLM_MAX_RETRIES
+
+    # Extract provider name for logging
+    provider_name = "custom" if config["base_url"] else config["provider"]
+
+    # Build JSON-only instruction prompt with full schema
+    schema_json = schema.model_json_schema()
+    system_instruction = (
+        "You must return ONLY valid JSON matching this exact schema. "
+        "No markdown code blocks, no explanations, no extra text.\n\n"
+        f"Schema:\n{json.dumps(schema_json, indent=2)}"
+    )
+    full_prompt = f"{system_instruction}\n\nUser request: {prompt}"
+
+    # Retry loop for JSON parsing + validation (independent budget)
+    for attempt in range(max_retries + 1):
+        try:
+            logger.debug(
+                "Structured generation attempt %d/%d",
+                attempt + 1,
+                max_retries + 1,
+                extra={
+                    "extra_fields": {
+                        "schema": schema.__name__,
+                        "provider": provider_name,
+                        "model": config["model"],
+                    }
+                },
+            )
+
+            # Call LLM (this has its own retry logic for transport errors)
+            raw_output = await _call_llm_with_retry(
+                prompt=full_prompt,
+                config=config,
+                temperature=temperature,
+            )
+
+            # Log truncated output at DEBUG level
+            logger.debug("Raw output (truncated): %s", raw_output[:200])
+
+            # Strip markdown code fences if present
+            cleaned_output = _strip_markdown_json(raw_output)
+
+            # Parse JSON (strict - no markdown code blocks)
+            try:
+                parsed_data = json.loads(cleaned_output)
+            except json.JSONDecodeError as e:
+                logger.debug("JSON parse error: %s", str(e))
+                if attempt == max_retries:
+                    logger.error(
+                        "JSON parsing failed after all retries",
+                        extra={
+                            "extra_fields": {
+                                "schema": schema.__name__,
+                                "attempts": attempt + 1,
+                                "error": str(e),
+                            }
+                        },
+                    )
+                    raise LLMRetryExhausted(f"Invalid JSON after {max_retries + 1} attempts") from e
+                # Retry with exponential backoff
+                delay = settings.LLM_RETRY_DELAY * (2**attempt)
+                logger.debug("Retrying after JSON parse error in %ss", delay)
+                await asyncio.sleep(delay)
+                continue
+
+            # Validate against schema (strict - extra='forbid' by default in Pydantic v2)
+            try:
+                validated_instance = schema.model_validate(parsed_data)
+            except ValidationError as e:
+                logger.debug("Schema validation error: %s", str(e))
+                if attempt == max_retries:
+                    logger.error(
+                        "Schema validation failed after all retries",
+                        extra={
+                            "extra_fields": {
+                                "schema": schema.__name__,
+                                "attempts": attempt + 1,
+                                "error": str(e),
+                            }
+                        },
+                    )
+                    raise LLMRetryExhausted(
+                        f"Schema validation failed after {max_retries + 1} attempts"
+                    ) from e
+                # Retry with exponential backoff
+                delay = settings.LLM_RETRY_DELAY * (2**attempt)
+                logger.debug("Retrying after validation error in %ss", delay)
+                await asyncio.sleep(delay)
+                continue
+
+            # Success!
+            logger.info(
+                "Structured generation successful",
+                extra={
+                    "extra_fields": {
+                        "schema": schema.__name__,
+                        "provider": provider_name,
+                        "model": config["model"],
+                        "attempts": attempt + 1,
+                    }
+                },
+            )
+            return validated_instance
+
+        except LLMRetryExhausted:
+            # LLM-level retry exhausted - propagate
+            raise
+
+    # This should never be reached due to the loop logic
+    raise LLMRetryExhausted("Unexpected retry loop exit")
