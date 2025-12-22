@@ -70,9 +70,6 @@ The CI/CD pipeline runs on:
 Runs tests across multiple Python versions to ensure compatibility.
 
 **Python Versions Tested:**
-- Python 3.8
-- Python 3.9
-- Python 3.10
 - Python 3.11
 - Python 3.12
 
@@ -83,12 +80,18 @@ Runs tests across multiple Python versions to ensure compatibility.
 4. Cache dependencies for faster runs
 5. Install project dependencies
 6. Run ruff linting checks
-7. Run pytest test suite
+7. Run pytest test suite with coverage
+8. Upload coverage report to Codecov
 
 **Environment Variables:**
 - `APP_NAME=test-app`
 - `ENVIRONMENT=development`
 - `LOG_LEVEL=INFO`
+
+**Coverage Settings:**
+- Minimum coverage threshold: 80%
+- Reports generated: terminal, HTML, XML
+- Coverage uploads to Codecov for tracking trends
 
 #### 2. Ruff Format Check Job
 
@@ -204,11 +207,79 @@ jobs:
         run: your-command
 ```
 
+## Code Coverage
+
+### Overview
+
+Code coverage measures how much of your source code is tested. The project uses `pytest-cov` to generate coverage reports.
+
+### Coverage Configuration
+
+Coverage settings are in `pytest.ini`:
+- Minimum threshold: 80%
+- Reports: terminal (with missing lines), HTML, XML
+- Coverage scope: `src/` directory only
+
+### Running Coverage Locally
+
+```bash
+# Run tests with coverage (uses pytest.ini settings)
+poetry run pytest
+
+# View detailed HTML report
+open htmlcov/index.html
+```
+
+### Coverage Reports
+
+**Terminal Output:**
+Shows coverage percentage and missing line numbers for each file.
+
+**HTML Report:**
+Generated in `htmlcov/` directory. Provides interactive, line-by-line coverage visualization.
+
+**XML Report:**
+Generated as `coverage.xml`. Used by Codecov for trend tracking.
+
+### Interpreting Coverage
+
+- **Green (covered)**: Lines executed during tests
+- **Red (missing)**: Lines never executed during tests
+- **Yellow (partial)**: Branches partially covered (e.g., only if-branch tested, not else)
+
+### Coverage Best Practices
+
+1. **Aim for 80%+ overall** - Balance between thoroughness and practicality
+2. **Critical code should be 90%+** - LLM client, core business logic
+3. **Don't chase 100%** - Some code (error handlers, edge cases) may not be worth testing
+4. **Test behavior, not lines** - Coverage is a metric, not a goal
+
+### Codecov Integration
+
+The CI pipeline uploads coverage to Codecov after each test run:
+- Track coverage trends over time
+- See coverage changes in pull requests
+- Identify untested code sections
+
+To enable Codecov:
+1. Sign up at [codecov.io](https://codecov.io)
+2. Add your repository
+3. Add `CODECOV_TOKEN` to GitHub repository secrets
+4. Coverage will upload automatically on next CI run
+
+### Coverage Failures
+
+**CI fails with "coverage below 80%":**
+1. Run coverage locally to identify gaps
+2. Add tests for missing coverage
+3. If legitimate uncovered code, consider lowering threshold in `pytest.ini`
+
 ## Configuration Files
 
 - `.pre-commit-config.yaml` - Pre-commit hook configuration
 - `.github/workflows/ci.yml` - GitHub Actions workflow
-- `pyproject.toml` - Ruff linter configuration (under `[tool.ruff]`)
+- `pyproject.toml` - Ruff linter and project configuration
+- `pytest.ini` - Pytest and coverage configuration
 
 ## Monitoring
 

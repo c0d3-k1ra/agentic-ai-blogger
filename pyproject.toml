@@ -1,6 +1,6 @@
 [tool.poetry]
-name = "tech-article-generator"
-version = "0.1.0"
+name = "agentic-ai-blogger"
+version = "0.2.0"
 description = "A minimal Python project for generating technical articles"
 authors = ["Amit Upadhyay <amit.upadhyay021@outlook.com>"]
 readme = "README.md"
@@ -16,6 +16,7 @@ litellm = "^1.0.0"
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.0.0"
 pytest-asyncio = "^0.21.0"
+pytest-cov = "^4.1.0"
 ruff = "^0.14.10"
 pre-commit = ">=3.5.0,<4.0.0"
 
