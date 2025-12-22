@@ -13,6 +13,24 @@ integration_tests/
     └── test_search_results.py  # PostgreSQL integration tests
 ```
 
+## Schema Management
+
+**Integration tests use Alembic migrations for schema setup:**
+
+The test script (`run_integration_tests.sh`) runs `alembic upgrade head` **once** before all tests, creating the schema using production migrations. Individual test fixtures then use **transaction rollback** for fast, isolated test cleanup.
+
+**Workflow:**
+1. Script runs: `alembic upgrade head` (schema created once)
+2. Each test: Begins transaction → runs test → rollback transaction
+3. Result: Fast tests with clean state between each test
+
+**Benefits:**
+- ✅ **Fast** - Migrations run once, not per-test
+- ✅ **Production parity** - Uses same migrations as deployment
+- ✅ **Isolated** - Each test gets clean tables via rollback
+- ✅ **Validates migrations** - Catches migration issues early
+- ✅ **No schema drift** - Tests use production schema
+
 ## Running Integration Tests
 
 ### Using the Script (Recommended)

@@ -5,7 +5,6 @@ import os
 import pytest
 
 from src.database.db import close_db, get_engine, init_db
-from src.database.models import Base
 from src.utils.config import reset_settings
 
 
@@ -37,31 +36,62 @@ def setup_test_env():
     reset_settings()
 
 
+@pytest.fixture(scope="session", autouse=True)
+def clean_database_before_tests():
+    """Clean database once before all tests start."""
+    from sqlalchemy import text
+    from sqlalchemy.orm import sessionmaker
+
+    init_db()
+    SessionLocal = sessionmaker(bind=get_engine())
+    session = SessionLocal()
+
+    try:
+        # Clean any leftover data from previous test runs
+        session.execute(text("TRUNCATE topics, articles, search_results RESTART IDENTITY CASCADE"))
+        session.commit()
+    except Exception:
+        session.rollback()
+    finally:
+        session.close()
+        close_db()
+
+    yield
+
+
 @pytest.fixture(scope="function")
 def db_session():
     """Provide a clean database session for each test.
 
-    This fixture:
-    - Initializes the database connection
-    - Creates all tables
-    - Provides a session for the test
-    - Cleans up by dropping tables after the test
+    This fixture assumes the schema already exists (created by run_integration_tests.sh
+    or CI pipeline via 'alembic upgrade head'). After each test, all tables are
+    truncated to ensure a clean state for the next test.
+
+    Benefits:
+    - Fast: TRUNCATE is much faster than DELETE
+    - Clean: Each test starts with empty tables
+    - Isolated: Tests don't affect each other
+    - Realistic: Tests can use commit() like production code
     """
-    # Initialize database
+    # Initialize database connection
     init_db()
 
-    # Create tables
-    engine = get_engine()
-    Base.metadata.create_all(engine)
-
-    # Create session using sessionmaker
+    # Create session
+    from sqlalchemy import text
     from sqlalchemy.orm import sessionmaker
 
-    SessionLocal = sessionmaker(bind=engine)
+    SessionLocal = sessionmaker(bind=get_engine())
     session = SessionLocal()
 
     yield session
 
-    # Cleanup
-    session.close()
-    Base.metadata.drop_all(engine)
+    # Clean up: truncate all tables to remove test data
+    # CASCADE handles foreign key constraints
+    # RESTART IDENTITY resets sequences
+    try:
+        session.execute(text("TRUNCATE topics, articles, search_results RESTART IDENTITY CASCADE"))
+        session.commit()
+    except Exception:
+        session.rollback()
+    finally:
+        session.close()

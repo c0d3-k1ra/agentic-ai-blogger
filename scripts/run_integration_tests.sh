@@ -41,6 +41,13 @@ while ! docker exec postgres-test pg_isready -U test > /dev/null 2>&1; do
 done
 
 echo "✅ PostgreSQL is ready"
+
+# Export DATABASE_URL for migrations and tests
+export DATABASE_URL="postgresql://test:test@localhost:5432/testdb"
+
+echo "🔄 Running database migrations..."
+poetry run alembic upgrade head
+
 echo "🧪 Running integration tests..."
 
 # Run integration tests with explicit path (no coverage)

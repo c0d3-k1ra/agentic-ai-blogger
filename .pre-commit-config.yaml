@@ -25,3 +25,14 @@ repos:
       - id: check-toml
       - id: check-merge-conflict
       - id: detect-private-key
+
+  # Helper message when auto-fixes are applied
+  - repo: local
+    hooks:
+      - id: autofix-reminder
+        name: 📝 Auto-fix Reminder
+        entry: scripts/autofix-reminder.sh
+        language: script
+        always_run: false
+        pass_filenames: false
+        stages: [commit]
