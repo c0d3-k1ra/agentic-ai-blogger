@@ -8,7 +8,7 @@ This module defines the core SQLAlchemy models using PostgreSQL-specific feature
 - Explicit indexes and relationships
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List
 
 from sqlalchemy import DateTime, Enum, ForeignKey, Index, String, Text, event, text
@@ -304,18 +304,18 @@ class EmailThread(Base):
 @event.listens_for(Topic, "before_update")
 def receive_before_update_topic(_mapper, _connection, target):
     """Update the updated_at timestamp before updating a Topic."""
-    target.updated_at = datetime.utcnow()
+    target.updated_at = datetime.now(timezone.utc)
 
 
 # Event listener for auto-updating updated_at on Article
 @event.listens_for(Article, "before_update")
 def receive_before_update_article(_mapper, _connection, target):
     """Update the updated_at timestamp before updating an Article."""
-    target.updated_at = datetime.utcnow()
+    target.updated_at = datetime.now(timezone.utc)
 
 
 # Event listener for auto-updating updated_at on EmailThread
 @event.listens_for(EmailThread, "before_update")
 def receive_before_update_email_thread(_mapper, _connection, target):
     """Update the updated_at timestamp before updating an EmailThread."""
-    target.updated_at = datetime.utcnow()
+    target.updated_at = datetime.now(timezone.utc)
