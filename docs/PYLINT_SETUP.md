@@ -4,9 +4,10 @@ This project uses pylint for code quality enforcement with strict standards.
 
 ## Configuration Summary
 
-- **Minimum Score:** 9.0/10
+- **Minimum Score:** 9.5/10 (strict)
 - **Failure Policy:** Errors only (warnings allowed)
 - **Current Score:** 10.00/10 ✨
+- **Scope:** Only `src/` directory (tests excluded)
 
 ## Configuration File
 
@@ -14,16 +15,27 @@ The `.pylintrc` file contains:
 
 ```ini
 [MAIN]
-fail-under=9.0    # Minimum score required
-fail-on=E         # Fail only on errors (E), not warnings (W)
+fail-under=9.5              # Minimum score required (strict)
+fail-on=E                   # Fail only on errors (E), not warnings (W)
+ignore=tests,example_logging.py,.env,pytest.ini,poetry.lock
+
+[MESSAGES CONTROL]
+disable=
+    too-few-public-methods,
+    global-statement,
+    broad-exception-caught,
+    unsubscriptable-object,
+    no-member,
+    duplicate-code
 ```
 
 ## Usage
 
 ### Basic Check
+
 ```bash
-# Run pylint on source code
-pylint src/
+# Run pylint on entire project (only checks src/ directory)
+pylint .
 
 # Expected output:
 # Your code has been rated at 10.00/10
@@ -31,29 +43,37 @@ pylint src/
 ```
 
 ### With Detailed Reports
+
 ```bash
-pylint src/ --reports=y
+pylint . --reports=y
 ```
 
 ### Check Specific Files
+
 ```bash
 pylint src/database/db.py
 pylint src/utils/config.py
 ```
 
+### What Gets Checked
+
+**Included:** ✅ `src/` directory only  
+**Excluded:** ❌ `tests/`, `example_logging.py`, config files
+
 ## Exit Codes
 
-- **0** - Success (score >= 9.0 and no errors)
+- **0** - Success (score >= 9.5 and no errors)
 - **1** - Fatal message issued
 - **2** - Error message issued (will fail CI/CD)
 - **4** - Warning message issued (won't fail CI/CD)
 - **8** - Refactor message issued
 - **16** - Convention message issued
-- **32** - Usage error (score < 9.0)
+- **32** - Usage error (score < 9.5)
 
 ## CI/CD Integration
 
 ### GitHub Actions Example
+
 ```yaml
 name: Code Quality
 
@@ -77,6 +97,7 @@ jobs:
 ```
 
 ### GitLab CI Example
+
 ```yaml
 lint:
   stage: test
@@ -89,6 +110,7 @@ lint:
 ```
 
 ### Pre-commit Hook
+
 ```yaml
 # .pre-commit-config.yaml
 repos:
@@ -122,6 +144,7 @@ The following checks are disabled for valid project reasons:
 ## Troubleshooting
 
 ### Score Below 9.0
+
 ```bash
 # Get detailed report
 pylint src/ --reports=y
@@ -131,7 +154,9 @@ pylint src/ --disable=W,C,R  # Only show errors
 ```
 
 ### False Positives
+
 If pylint reports false positives, add inline comments:
+
 ```python
 # pylint: disable=specific-warning-name
 problematic_code_here()
@@ -143,12 +168,14 @@ Or add to `.pylintrc` if project-wide.
 ## Maintenance
 
 To update the minimum score requirement, edit `.pylintrc`:
+
 ```ini
 [MAIN]
 fail-under=9.5  # Increase strictness
 ```
 
 To change failure policy:
+
 ```ini
 [MAIN]
 fail-on=E,F  # Fail on errors and fatal messages only

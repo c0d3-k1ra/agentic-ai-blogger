@@ -13,7 +13,7 @@ A minimal, well-structured Python project for generating technical articles with
 
 ## Project Structure
 
-```
+```txt
 tech-article-generator/
 ├── src/
 │   ├── database/
@@ -73,11 +73,13 @@ poetry shell
 ## Configuration
 
 1. **Copy environment template:**
+
    ```bash
    cp .env.example .env
    ```
 
 2. **Edit `.env` with your settings:**
+
    ```env
    # Application
    APP_NAME=tech-article-generator
@@ -133,7 +135,7 @@ logger.info("Application started")
 logger.error("An error occurred", extra_fields={"user_id": 123})
 ```
 
-### Configuration
+### Configurations
 
 ```python
 from src.utils.config import get_settings
@@ -208,11 +210,13 @@ For more details on code quality standards, see the [Pylint Configuration Guide]
 ## Dependencies
 
 **Core:**
+
 - SQLAlchemy 2.0+ - Database ORM
 - psycopg2-binary 2.9+ - PostgreSQL adapter
 - pydantic-settings 2.0+ - Configuration management
 
 **Development:**
+
 - pytest 7.4+ - Testing framework
 - pylint 3.0+ - Code quality checker
 
@@ -223,6 +227,7 @@ For more details on code quality standards, see the [Pylint Configuration Guide]
 ## Contributing
 
 Contributions are welcome! Please ensure:
+
 1. Code passes all tests
 2. Pylint score ≥ 9.0
 3. Documentation is updated
@@ -231,6 +236,7 @@ Contributions are welcome! Please ensure:
 ## Support
 
 For issues and questions:
+
 - Create an issue in the repository
 - Check the [documentation](docs/)
 - Review existing issues
@@ -238,6 +244,7 @@ For issues and questions:
 ---
 
 **Current Status:** ✅ Production Ready
+
 - Database: Configured with retry logic
 - Logging: Structured logging enabled
 - Testing: Comprehensive test coverage

@@ -11,6 +11,9 @@ fail-on=E
 # Pickle collected data for later comparisons
 persistent=yes
 
+# Files or directories to be skipped
+ignore=tests,example_logging.py,.env,pytest.ini,poetry.lock
+
 # List of plugins (as comma separated values of python module names)
 load-plugins=
 
@@ -21,7 +24,8 @@ disable=
     global-statement,  # Acceptable for singleton pattern
     broad-exception-caught,  # Sometimes necessary for retry logic
     unsubscriptable-object,  # False positive with SQLAlchemy/Pydantic
-    no-member  # False positive with Pydantic SecretStr
+    no-member,  # False positive with Pydantic SecretStr
+    duplicate-code  # Allow similar code patterns across modules
 
 [FORMAT]
 # Maximum number of characters on a single line

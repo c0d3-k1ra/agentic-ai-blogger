@@ -51,7 +51,7 @@ with get_session() as session:
 All database configuration is done through environment variables:
 
 | Variable | Default | Description |
-|----------|---------|-------------|
+| ---------- | --------- | ------------- |
 | `DATABASE_URL` | **Required** | PostgreSQL connection string |
 | `DB_POOL_SIZE` | 5 | Number of connections to maintain in the pool |
 | `DB_MAX_OVERFLOW` | 10 | Max connections beyond pool_size |
@@ -74,6 +74,7 @@ init_db()
 ```
 
 **Raises:**
+
 - `DatabaseConnectionError`: If DATABASE_URL is not configured
 - `DatabaseError`: If engine creation fails
 
@@ -91,12 +92,14 @@ with get_session() as session:
 ```
 
 **Features:**
+
 - Automatically commits on successful execution
 - Automatically rolls back on errors
 - Always closes the session
 - Retries on transient errors (connection failures, deadlocks, etc.)
 
 **Raises:**
+
 - `DatabaseError`: If session factory is not initialized
 - `DatabaseRetryError`: If all retry attempts fail
 
@@ -114,6 +117,7 @@ engine = get_engine()
 **Returns:** SQLAlchemy Engine instance
 
 **Raises:**
+
 - `DatabaseError`: If engine is not initialized
 
 ### `health_check()`
@@ -130,6 +134,7 @@ if health_check():
 **Returns:** `True` if database is accessible
 
 **Raises:**
+
 - `DatabaseError`: If engine is not initialized
 - `DatabaseRetryError`: If all retry attempts fail
 
@@ -149,7 +154,7 @@ Useful for cleanup in tests or application shutdown.
 
 ### Exception Hierarchy
 
-```
+```txt
 DatabaseError (base exception)
 ├── DatabaseConnectionError (connection setup failures)
 └── DatabaseRetryError (retry exhaustion)
@@ -158,12 +163,14 @@ DatabaseError (base exception)
 ### Transient Error Retry
 
 The connection layer automatically retries on transient errors:
+
 - Connection refused/reset/timeout
 - Deadlocks
 - Connection pool exhaustion
 - Server closed connection
 
 **Retry Strategy:**
+
 - Exponential backoff: 1s, 2s, 4s, etc.
 - Configurable max retries (default: 3)
 - Only retries transient errors
@@ -325,6 +332,7 @@ except DatabaseRetryError as e:
 **Problem:** Calling database functions before `init_db()`
 
 **Solution:**
+
 ```python
 from src.database.db import init_db
 init_db()  # Call this first
@@ -335,6 +343,7 @@ init_db()  # Call this first
 **Problem:** Too many concurrent connections
 
 **Solutions:**
+
 1. Increase pool size: `DB_POOL_SIZE=10`
 2. Increase max overflow: `DB_MAX_OVERFLOW=20`
 3. Ensure sessions are properly closed (use context managers)
@@ -344,12 +353,14 @@ init_db()  # Call this first
 **Problem:** `DatabaseRetryError` after all retries
 
 **Possible Causes:**
+
 1. Database is down
 2. Network issues
 3. Incorrect credentials
 4. Database overloaded
 
 **Check:**
+
 - Database server status
 - Network connectivity
 - Connection string validity
@@ -357,7 +368,7 @@ init_db()  # Call this first
 
 ## Architecture
 
-```
+```txt
 ┌─────────────────┐
 │  Application    │
 └────────┬────────┘
