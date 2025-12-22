@@ -8,6 +8,7 @@ from sqlalchemy import create_engine, exc, text
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session, sessionmaker
 
+from src.database.models import Article, Topic
 from src.utils.config import get_settings
 from src.utils.logging_config import get_logger
 
@@ -267,3 +268,192 @@ def close_db() -> None:
         _engine = None
         _session_factory = None
         _get_logger().info("Database connections closed")
+
+
+# ============================================================================
+# CRUD Helpers
+# ============================================================================
+
+
+def create_topic(
+    session: Session,
+    *,
+    name: str,
+    description: str | None = None,
+    keywords: list | None = None,
+    metadata: dict | None = None
+) -> Topic:
+    """
+    Create a new topic.
+
+    Args:
+        session: SQLAlchemy session (caller must commit)
+        name: Unique topic name
+        description: Optional description
+        keywords: Optional list (DB default: [])
+        metadata: Optional dict (DB default: {})
+
+    Returns:
+        Created Topic instance
+
+    Raises:
+        IntegrityError: If name already exists
+    """
+    topic = Topic(
+        name=name,
+        description=description,
+        keywords=keywords if keywords is not None else [],
+        meta_data=metadata if metadata is not None else {}
+    )
+    session.add(topic)
+    session.flush()
+    session.refresh(topic)
+    return topic
+
+
+def get_topic_by_id(session: Session, topic_id) -> Topic | None:
+    """
+    Get topic by ID.
+
+    Args:
+        session: SQLAlchemy session
+        topic_id: Topic ID (UUID)
+
+    Returns:
+        Topic instance or None if not found
+    """
+    return session.get(Topic, topic_id)
+
+
+def get_topic_by_name(session: Session, name: str) -> Topic | None:
+    """
+    Get topic by name.
+
+    Args:
+        session: SQLAlchemy session
+        name: Topic name
+
+    Returns:
+        Topic instance or None if not found
+    """
+    return session.query(Topic).filter(Topic.name == name).first()
+
+
+def update_topic(session: Session, topic_id, **fields) -> Topic:
+    """
+    Update topic fields.
+
+    Args:
+        session: SQLAlchemy session (caller must commit)
+        topic_id: Topic ID (UUID)
+        **fields: Fields to update (name, description, keywords, metadata)
+
+    Returns:
+        Updated Topic instance
+
+    Raises:
+        ValueError: If topic not found or unknown field provided
+    """
+    topic = session.get(Topic, topic_id)
+    if not topic:
+        raise ValueError(f"Topic with id {topic_id} not found")
+
+    allowed_fields = {'name', 'description', 'keywords', 'metadata'}
+    unknown = set(fields.keys()) - allowed_fields
+    if unknown:
+        raise ValueError(f"Unknown fields: {unknown}")
+
+    for key, value in fields.items():
+        if key == 'metadata':
+            topic.meta_data = value
+        else:
+            setattr(topic, key, value)
+
+    session.flush()
+    session.refresh(topic)
+    return topic
+
+
+def create_article(
+    session: Session,
+    *,
+    topic_id,
+    title: str,
+    content: str | None = None,
+    metadata: dict | None = None
+) -> Article:
+    """
+    Create a new article.
+
+    Args:
+        session: SQLAlchemy session (caller must commit)
+        topic_id: Valid topic ID (FK enforced)
+        title: Article title
+        content: Optional content (can be None)
+        metadata: Optional dict (DB default: {})
+
+    Returns:
+        Created Article instance
+
+    Raises:
+        IntegrityError: If topic_id doesn't exist
+    """
+    article = Article(
+        topic_id=topic_id,
+        title=title,
+        content=content if content is not None else "",
+        meta_data=metadata if metadata is not None else {}
+    )
+    session.add(article)
+    session.flush()
+    session.refresh(article)
+    return article
+
+
+def get_article_by_id(session: Session, article_id) -> Article | None:
+    """
+    Get article by ID.
+
+    Args:
+        session: SQLAlchemy session
+        article_id: Article ID (UUID)
+
+    Returns:
+        Article instance or None if not found
+    """
+    return session.get(Article, article_id)
+
+
+def update_article(session: Session, article_id, **fields) -> Article:
+    """
+    Update article fields.
+
+    Args:
+        session: SQLAlchemy session (caller must commit)
+        article_id: Article ID (UUID)
+        **fields: Fields to update (title, content, metadata, status, published_at)
+
+    Returns:
+        Updated Article instance
+
+    Raises:
+        ValueError: If article not found or unknown field provided
+    """
+    article = session.get(Article, article_id)
+    if not article:
+        raise ValueError(f"Article with id {article_id} not found")
+
+    allowed_fields = {'title', 'content', 'metadata', 'status', 'published_at'}
+    unknown = set(fields.keys()) - allowed_fields
+    if unknown:
+        raise ValueError(f"Unknown fields: {unknown}")
+
+    for key, value in fields.items():
+        if key == 'metadata':
+            article.meta_data = value
+        else:
+            setattr(article, key, value)
+
+    session.flush()
+    session.refresh(article)
+    return article
