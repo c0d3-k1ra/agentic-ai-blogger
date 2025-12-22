@@ -103,6 +103,43 @@ Verifies code formatting consistency.
 3. Install Poetry and dependencies
 4. Check code formatting with ruff
 
+#### 3. Integration Tests Job
+
+Runs integration tests against a real PostgreSQL database.
+
+**Python Versions Tested:**
+- Python 3.11
+- Python 3.12
+
+**PostgreSQL Service:**
+- Image: PostgreSQL 17
+- Test credentials: `test/test`
+- Test database: `testdb`
+- Health checks ensure database is ready before tests run
+
+**Steps:**
+1. Checkout code
+2. Set up Python environment
+3. Install Poetry
+4. Cache dependencies for faster runs
+5. Install project dependencies
+6. **Run database migrations** (`alembic upgrade head`)
+7. Run integration tests against PostgreSQL
+8. Integration tests verify database operations and schema
+
+**Environment Variables:**
+- `DATABASE_URL=postgresql://test:test@localhost:5432/testdb`
+- `APP_NAME=test-app`
+- `ENVIRONMENT=development`
+- `LOG_LEVEL=INFO`
+
+**Why Migrations in CI:**
+Running `alembic upgrade head` in CI ensures:
+- Migrations work on a clean database
+- Schema matches what integration tests expect
+- Migration syntax errors are caught before production
+- Mimics production deployment process
+
 ### Viewing Results
 
 1. Navigate to your repository on GitHub

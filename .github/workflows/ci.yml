@@ -138,6 +138,11 @@ jobs:
     - name: Install project
       run: poetry install --no-interaction
 
+    - name: Run database migrations
+      run: poetry run alembic upgrade head
+      env:
+        DATABASE_URL: postgresql://test:test@localhost:5432/testdb
+
     - name: Run integration tests
       run: poetry run pytest integration_tests/ --no-cov -v --tb=short
       env:
