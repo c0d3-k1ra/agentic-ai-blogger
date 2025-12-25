@@ -339,9 +339,9 @@ class TestTitleNormalization:
 
             # Check no adjacent duplicates (case-insensitive)
             for i in range(len(words) - 1):
-                assert (
-                    words[i].lower() != words[i + 1].lower()
-                ), f"Adjacent duplicate in title: {title}"
+                assert words[i].lower() != words[i + 1].lower(), (
+                    f"Adjacent duplicate in title: {title}"
+                )
 
 
 class TestIntroAndConclusion:
