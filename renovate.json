@@ -1,0 +1,21 @@
+{
+  "extends": ["config:recommended"],
+  "schedule": ["before 3am on Monday"],
+  "grouping": {
+    "default": {
+      "groupName": "dependencies"
+    },
+    "preCommit": {
+      "groupName": "pre-commit hooks"
+    }
+  },
+  "poetry": {
+    "enabled": true
+  },
+  "pre-commit": {
+    "enabled": true
+  },
+  "labels": ["dependencies"],
+  "commitMessagePrefix": "chore(deps):",
+  "prConcurrentLimit": 5
+}
