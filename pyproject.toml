@@ -25,7 +25,7 @@ pytest = "^7.0.0"
 pytest-asyncio = "^0.21.0"
 pytest-cov = "^4.1.0"
 ruff = "^0.14.10"
-pre-commit = ">=3.5.0,<4.0.0"
+pre-commit = ">=4.5.1,<4.6.0"
 
 [tool.ruff]
 # Standard line length for Python projects
