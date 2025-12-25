@@ -91,7 +91,7 @@ jobs:
     # PostgreSQL service container
     services:
       postgres:
-        image: postgres:17
+        image: postgres:18
         env:
           POSTGRES_USER: test
           POSTGRES_PASSWORD: test
