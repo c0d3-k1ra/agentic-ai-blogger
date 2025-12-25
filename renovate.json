@@ -1,14 +1,17 @@
 {
   "extends": ["config:recommended"],
   "schedule": ["before 3am on Monday"],
-  "grouping": {
-    "default": {
-      "groupName": "dependencies"
+  "packageRules": [
+    {
+      "groupName": "pre-commit hooks",
+      "matchDatasources": ["pre-commit"]
     },
-    "preCommit": {
-      "groupName": "pre-commit hooks"
+    {
+      "groupName": "python dependencies",
+      "matchDatasources": ["pypi"],
+      "matchUpdateTypes": ["minor", "patch"]
     }
-  },
+  ],
   "poetry": {
     "enabled": true
   },
