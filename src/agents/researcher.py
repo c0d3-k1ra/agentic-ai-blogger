@@ -33,6 +33,7 @@ from dataclasses import dataclass
 
 from src.agents.structure_planner import Outline, Section
 from src.integrations.llm_client import generate_text
+from src.integrations.prompts import RESEARCH_SYNTHESIS_PROMPT_V1
 from src.integrations.search.arxiv_client import fetch_arxiv
 from src.integrations.search.github_trending_client import fetch_github_trending
 from src.integrations.search.tavily_client import search_tavily
@@ -223,6 +224,64 @@ def _build_citations(
     return citations
 
 
+def _format_web_results(results: list[dict]) -> str:
+    """Format web search results for prompt.
+
+    Args:
+        results: Web search results from Tavily
+
+    Returns:
+        Formatted string with top 5 results
+    """
+    if not results:
+        return "No web results available."
+
+    formatted = "\n\n".join(
+        f"Title: {r.get('title', 'N/A')}\n"
+        + f"Content: {r.get('content', r.get('summary', 'N/A'))[:500]}"
+        for r in results[:5]
+    )
+    return formatted if formatted else "No web results available."
+
+
+def _format_papers(papers: list[dict]) -> str:
+    """Format arXiv papers for prompt.
+
+    Args:
+        papers: arXiv papers from fetch_arxiv
+
+    Returns:
+        Formatted string with top 3 papers
+    """
+    if not papers:
+        return "No papers available."
+
+    formatted = "\n\n".join(
+        f"Title: {p.get('title', 'N/A')}\nSummary: {p.get('summary', 'N/A')[:500]}"
+        for p in papers[:3]
+    )
+    return formatted if formatted else "No papers available."
+
+
+def _format_code_examples(examples: list[dict]) -> str:
+    """Format GitHub code examples for prompt.
+
+    Args:
+        examples: GitHub repositories from fetch_github_trending
+
+    Returns:
+        Formatted string with top 3 code examples
+    """
+    if not examples:
+        return "No code examples available."
+
+    formatted = "\n\n".join(
+        f"Repository: {c.get('name', 'N/A')}\nDescription: {c.get('description', 'N/A')}"
+        for c in examples[:3]
+    )
+    return formatted if formatted else "No code examples available."
+
+
 def _build_synthesis_prompt(
     topic: str,
     section_title: str,
@@ -232,6 +291,8 @@ def _build_synthesis_prompt(
 ) -> str:
     """Build prompt for LLM to synthesize research findings.
 
+    Uses centralized prompt template from prompts.py with formatted research data.
+
     Args:
         topic: Article topic
         section_title: Section being researched
@@ -240,58 +301,21 @@ def _build_synthesis_prompt(
         code_examples: GitHub repositories
 
     Returns:
-        Formatted prompt string
+        Formatted prompt string ready for LLM
     """
-    # Format web results
-    web_text = "\n\n".join(
-        f"Title: {r.get('title', 'N/A')}\n"
-        + f"Content: {r.get('content', r.get('summary', 'N/A'))[:500]}"
-        for r in web_results[:5]
+    # Format all research sources
+    web_text = _format_web_results(web_results)
+    papers_text = _format_papers(papers)
+    code_text = _format_code_examples(code_examples)
+
+    # Use centralized prompt template
+    return RESEARCH_SYNTHESIS_PROMPT_V1.format(
+        topic=topic,
+        section_title=section_title,
+        web_text=web_text,
+        papers_text=papers_text,
+        code_text=code_text,
     )
-
-    # Format papers
-    papers_text = "\n\n".join(
-        f"Title: {p.get('title', 'N/A')}\nSummary: {p.get('summary', 'N/A')[:500]}"
-        for p in papers[:3]
-    )
-
-    # Format code examples
-    code_text = "\n\n".join(
-        f"Repository: {c.get('name', 'N/A')}\nDescription: {c.get('description', 'N/A')}"
-        for c in code_examples[:3]
-    )
-
-    prompt = f"""You are a research synthesis expert.
-
-TASK: Synthesize research findings into a comprehensive, structured summary for article writing.
-
-ARTICLE CONTEXT:
-Topic: {topic}
-Section: {section_title}
-
-WEB SEARCH RESULTS:
-{web_text if web_text else "No web results available."}
-
-ACADEMIC PAPERS:
-{papers_text if papers_text else "No papers available."}
-
-CODE EXAMPLES:
-{code_text if code_text else "No code examples available."}
-
-INSTRUCTIONS:
-- Synthesize all sources into a coherent summary
-- Focus on information relevant to the section title
-- Highlight key concepts, techniques, and insights
-- Note any code patterns or best practices found
-- Identify gaps or contradictions in the research
-- Keep the synthesis concise but comprehensive (500-800 words)
-- Use clear, technical language suitable for article writing
-
-OUTPUT:
-Provide a structured synthesis that a technical writer can use to write the section.
-"""
-
-    return prompt
 
 
 async def research_section(

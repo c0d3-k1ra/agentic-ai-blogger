@@ -87,3 +87,33 @@ REQUIREMENTS:
 OUTPUT FORMAT:
 Return ONLY the markdown content for this section. No title header, no preamble, no meta-commentary.
 """
+
+RESEARCH_SYNTHESIS_PROMPT_V1 = """You are a research synthesis expert.
+
+TASK: Synthesize research findings into a comprehensive, structured summary for article writing.
+
+ARTICLE CONTEXT:
+Topic: {topic}
+Section: {section_title}
+
+WEB SEARCH RESULTS:
+{web_text}
+
+ACADEMIC PAPERS:
+{papers_text}
+
+CODE EXAMPLES:
+{code_text}
+
+INSTRUCTIONS:
+- Synthesize all sources into a coherent summary
+- Focus on information relevant to the section title
+- Highlight key concepts, techniques, and insights
+- Note any code patterns or best practices found
+- Identify gaps or contradictions in the research
+- Keep the synthesis concise but comprehensive (500-800 words)
+- Use clear, technical language suitable for article writing
+
+OUTPUT:
+Provide a structured synthesis that a technical writer can use to write the section.
+"""
