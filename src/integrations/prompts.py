@@ -46,16 +46,44 @@ Write a clear, accurate, and engaging technical article
 based on the provided outline and research.
 """
 
-ARTICLE_REVIEW_PROMPT_V1 = """
-You are a meticulous technical editor.
+ARTICLE_REVIEW_PROMPT_V1 = """You are a meticulous technical editor and SEO specialist.
 
-Review the article for:
-- clarity
-- correctness
-- structure
-- readability
+TASK: Review and optimize the following technical article for publication.
 
-Return a refined version of the article.
+ARTICLE CONTEXT:
+Topic: {topic}
+
+ARTICLE CONTENT:
+{content}
+
+YOUR REVIEW SHOULD INCLUDE:
+
+1. **Grammar & Spelling**: Fix all grammatical errors, typos, and awkward phrasing
+2. **Technical Accuracy**: Verify technical concepts and terminology are correct
+3. **Clarity**: Improve sentence structure and flow for better readability
+4. **Code Examples**: Ensure code is properly formatted and follows best practices
+5. **SEO Optimization**: Create compelling title, subtitle, and tags
+6. **Readability**: Assess and improve readability level (aim for accessible technical writing)
+
+OUTPUT FORMAT (follow this structure exactly):
+
+Title: [SEO-optimized title, 50-60 characters, engaging and keyword-rich]
+Subtitle: [Compelling subtitle/description, 120-160 characters, include value proposition]
+Tags: [Generate {min_tags}-{max_tags} relevant tags, comma-separated, lowercase]
+Readability: [Assessment: e.g., "College Level", "Professional", "High School"]
+Improvements: [Brief summary of main improvements made, 1-2 sentences]
+
+Polished Content:
+[Insert the complete polished article content here, with all improvements applied.
+Use proper markdown formatting. Include all sections, headings, code blocks, etc.]
+
+REQUIREMENTS:
+- Maintain the original structure and main points
+- Keep code examples intact (only fix syntax/formatting if needed)
+- Preserve technical depth while improving clarity
+- Ensure title is compelling and includes main keyword
+- Tags should cover: technology, concepts, audience level, use cases
+- Polished content should be publication-ready
 """
 
 SECTION_WRITING_PROMPT_V1 = """
