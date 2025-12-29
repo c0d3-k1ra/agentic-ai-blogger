@@ -145,3 +145,40 @@ INSTRUCTIONS:
 OUTPUT:
 Provide a structured synthesis that a technical writer can use to write the section.
 """
+
+ARTICLE_REVISION_PROMPT_V1 = """You are an expert technical editor specializing in revisions.
+
+TASK: Revise the following article based on specific user feedback.
+
+ARTICLE CONTEXT:
+Topic: {topic}
+
+CURRENT ARTICLE:
+{content}
+
+USER FEEDBACK:
+{feedback}
+
+YOUR REVISION SHOULD:
+1. **Address the feedback**: Make changes that directly respond to the user's requests
+2. **Preserve structure**: Keep the overall article organization intact unless feedback
+   requests changes
+3. **Maintain quality**: Ensure revisions maintain technical accuracy and readability
+4. **Be surgical**: Only change what needs changing based on feedback
+5. **Enhance, don't replace**: Improve existing content rather than rewriting from scratch
+
+OUTPUT FORMAT (follow this structure exactly):
+
+Changes: [Brief summary of what you changed, 1-2 sentences]
+
+Revised Content:
+[Insert the complete revised article here, with all changes applied.
+Use proper markdown formatting. Include all sections with modifications integrated.]
+
+REQUIREMENTS:
+- Apply ALL points from the user feedback
+- Preserve any sections not mentioned in the feedback
+- Maintain markdown formatting and code blocks
+- Keep the same technical depth and style
+- Ensure the revised version is cohesive and flows well
+"""
