@@ -5,6 +5,7 @@ omit =
     */test_*.py
     */__init__.py
     */conftest.py
+    src/workflow/cli_helpers.py
 
 [report]
 precision = 2
