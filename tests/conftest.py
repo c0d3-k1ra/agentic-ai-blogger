@@ -5,6 +5,20 @@ from pathlib import Path
 
 import pytest
 
+# Import all node modules to trigger registration
+# This must happen at module level before any tests run
+from src.workflow.nodes import (  # noqa: F401
+    analyze_trends,
+    plan_structure,
+    publish,
+    research,
+    review,
+    revision,
+    scout_topics,
+    user_interaction,
+    write_draft,
+)
+
 
 @pytest.fixture(scope="session", autouse=True)
 def backup_env_file():

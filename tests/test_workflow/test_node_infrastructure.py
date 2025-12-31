@@ -557,12 +557,16 @@ class TestNodeRegistry:
     """Tests for NodeRegistry."""
 
     def setup_method(self):
-        """Clear registry before each test."""
+        """Save current registry state and clear for testing."""
+        # Save the existing nodes (workflow nodes imported in conftest)
+        self._saved_nodes = NodeRegistry._nodes.copy()
         NodeRegistry.clear()
 
     def teardown_method(self):
-        """Clear registry after each test."""
+        """Restore original registry state after each test."""
+        # Clear test nodes and restore original nodes
         NodeRegistry.clear()
+        NodeRegistry._nodes.update(self._saved_nodes)
 
     def test_register_node(self):
         """Test registering a node."""
