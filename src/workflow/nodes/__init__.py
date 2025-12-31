@@ -120,18 +120,34 @@ def handle_node_errors(func: F) -> F:
     """
 
     @functools.wraps(func)
-    async def wrapper(state: ArticleWorkflowState, *args, **kwargs) -> dict[str, Any]:
-        try:
-            return await func(state, *args, **kwargs)
-        except Exception as e:
-            node_name = getattr(func, "__name__", "unknown_node")
-            error_msg = f"Node '{node_name}' failed: {type(e).__name__}: {str(e)}"
-            logger.error(error_msg, exc_info=True)
-
-            return {
-                "errors": [error_msg],
-                "current_step": "failed",
-            }
+    async def wrapper(self_or_state, *args, **kwargs) -> dict[str, Any]:
+        # Handle both instance methods (self, state) and functions (state)
+        if isinstance(self_or_state, BaseNode):
+            # Instance method: self_or_state is self, first arg is state
+            state = args[0] if args else kwargs.get("state", {})
+            try:
+                return await func(self_or_state, state, *args[1:], **kwargs)
+            except Exception as e:
+                node_name = self_or_state.name
+                error_msg = f"Node '{node_name}' failed: {type(e).__name__}: {str(e)}"
+                logger.error(error_msg, exc_info=True)
+                return {
+                    "errors": [error_msg],
+                    "current_step": "failed",
+                }
+        else:
+            # Regular function: self_or_state is state
+            state = self_or_state
+            try:
+                return await func(state, *args, **kwargs)
+            except Exception as e:
+                node_name = getattr(func, "__name__", "unknown_node")
+                error_msg = f"Node '{node_name}' failed: {type(e).__name__}: {str(e)}"
+                logger.error(error_msg, exc_info=True)
+                return {
+                    "errors": [error_msg],
+                    "current_step": "failed",
+                }
 
     return wrapper  # type: ignore
 
@@ -163,23 +179,48 @@ def log_node_execution(func: F) -> F:
     """
 
     @functools.wraps(func)
-    async def wrapper(state: ArticleWorkflowState, *args, **kwargs) -> dict[str, Any]:
-        node_name = getattr(func, "__name__", "unknown_node")
-        workflow_id = state.get("workflow_id", "unknown")
+    async def wrapper(self_or_state, *args, **kwargs) -> dict[str, Any]:
+        # Handle both instance methods (self, state) and functions (state)
+        if isinstance(self_or_state, BaseNode):
+            # Instance method: self_or_state is self, first arg is state
+            state = args[0] if args else kwargs.get("state", {})
+            node_name = self_or_state.name
+            workflow_id = state.get("workflow_id", "unknown")
 
-        logger.info(f"[{workflow_id}] Starting node: {node_name}")
+            logger.info(f"[{workflow_id}] Starting execution of node: {node_name}")
+            start_time = time.time()
 
-        start_time = time.time()
+            try:
+                result = await func(self_or_state, state, *args[1:], **kwargs)
+                duration = time.time() - start_time
+                logger.info(
+                    f"[{workflow_id}] Completed execution of node: {node_name} ({duration:.2f}s)"
+                )
+                return result
+            except Exception:
+                duration = time.time() - start_time
+                logger.error(
+                    f"[{workflow_id}] Failed execution of node: {node_name} ({duration:.2f}s)"
+                )
+                raise
+        else:
+            # Regular function: self_or_state is state
+            state = self_or_state
+            node_name = getattr(func, "__name__", "unknown_node")
+            workflow_id = state.get("workflow_id", "unknown")
 
-        try:
-            result = await func(state, *args, **kwargs)
-            duration = time.time() - start_time
-            logger.info(f"[{workflow_id}] Completed node: {node_name} ({duration:.2f}s)")
-            return result
-        except Exception:
-            duration = time.time() - start_time
-            logger.error(f"[{workflow_id}] Failed node: {node_name} ({duration:.2f}s)")
-            raise
+            logger.info(f"[{workflow_id}] Starting node: {node_name}")
+            start_time = time.time()
+
+            try:
+                result = await func(state, *args, **kwargs)
+                duration = time.time() - start_time
+                logger.info(f"[{workflow_id}] Completed node: {node_name} ({duration:.2f}s)")
+                return result
+            except Exception:
+                duration = time.time() - start_time
+                logger.error(f"[{workflow_id}] Failed node: {node_name} ({duration:.2f}s)")
+                raise
 
     return wrapper  # type: ignore
 
