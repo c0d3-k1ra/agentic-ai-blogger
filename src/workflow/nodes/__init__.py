@@ -424,6 +424,20 @@ class NodeRegistry:
         return name in cls._nodes
 
 
+# Import all node modules to trigger registration
+# These imports must be at the bottom after class definitions to avoid circular imports
+from src.workflow.nodes import (  # noqa: E402, F401
+    analyze_trends,
+    plan_structure,
+    publish,
+    research,
+    review,
+    revision,
+    scout_topics,
+    user_interaction,
+    write_draft,
+)
+
 # Export all public APIs
 __all__ = [
     "BaseNode",

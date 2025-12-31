@@ -35,4 +35,13 @@ repos:
         language: script
         always_run: true
         pass_filenames: false
-        stages: [commit]
+        stages: [pre-commit]
+
+      # Pre-push hook - runs unit tests before git push
+      - id: pytest-pre-push
+        name: 🧪 Run Unit Tests Before Push
+        entry: poetry run pytest tests/ -v --maxfail=1 -x
+        language: system
+        pass_filenames: false
+        stages: [pre-push]
+        always_run: true
