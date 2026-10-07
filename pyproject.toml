@@ -15,7 +15,7 @@ alembic = "^1.12.0"
 python-dotenv = "^1.0.0"
 litellm = "^1.0.0"
 httpx = "^0.28.0"
-tavily-python = "^0.7.0"
+tavily-python = "^0.8.0"
 arxiv = "^2.1.0"
 pytrends = "^4.9.0"
 beautifulsoup4 = "^4.12.0"
@@ -26,7 +26,7 @@ pytest = "^9.0.0"
 pytest-asyncio = "^1.0.0"
 pytest-cov = "^7.0.0"
 ruff = "^0.14.10"
-pre-commit = ">=4.5.1,<4.6.0"
+pre-commit = ">=4.6.2,<4.7.0"
 
 [tool.ruff]
 # Standard line length for Python projects
